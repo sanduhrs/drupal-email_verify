@@ -1,0 +1,157 @@
+<?php
+
+// email_verify: Verifies thoroughly that email addresses are correctly entered
+//               during registration and account edition.
+//
+// Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>
+// License:   GNU GPL v2 or later
+
+function email_verify_help($section='') {
+  $output = '';
+  switch ($section) {
+    case "admin/modules#description":
+      $output = t("Verifies thoroughly email addresses during registration and account edition.");
+      break;
+  }
+  return $output;
+}
+
+/**
+ * Implementation of hook_user().
+ */
+function email_verify_user($type, &$edit, &$user, $category = NULL) {
+  if ($type == 'validate' && $category == 'account') {
+    return email_verify_edit_validate(arg(1), $edit);
+  }
+}
+
+function email_verify_edit_validate($uid, &$edit) {
+  // Validate the e-mail address:
+  if ($error = email_verify_check($edit['mail'])) {
+    form_set_error('mail', $error);
+  }
+
+  return $edit;
+}
+
+function email_verify_check($mail) {
+  if (!valid_email_address($mail)) {
+    // The address is syntactically incorrect.
+    // The problem will be caught by the 'user' module anyway, so we avoid
+    // duplicating the error reporting here, just return.
+    return;
+  }
+
+  $host = substr(strchr($mail, '@'), 1);
+
+  // Let's see if we can find anything about this host in the DNS
+  if (!checkdnsrr($host, 'ANY')) {
+    return t('Email host %host does not seem valid', array('%host' => "$host"));
+  }
+
+  // What SMTP servers should we contact?
+  $mxHosts = array();
+  if (! getmxrr($host, $mxHosts)) {
+    // When there is no MX record, the host itself should be used
+    $mxHosts[] = $host;
+  }
+
+  // Try to connect to one SMTP server
+  foreach ($mxHosts as $smtpServer) {
+
+    // Try not to display connection errors, but they still seem to come thru
+    // help is needed here
+    $old = error_reporting(0);
+    $connect = @fsockopen($smtpServer, 25, $errno, $errstr, 15);
+    error_reporting($old);
+
+    if (!$connect) continue;
+
+    if (ereg("^220", $out = fgets($connect, 1024))) {
+      // OK, we have a SMTP connection
+      break;
+    } else {
+      // The SMTP server probably does not like us
+      // (dynamic/residential IP for aol.com for instance)
+      // Be on the safe side and accept the address, at least it has a valid
+      // domain part...
+      return;
+    }
+  }
+
+  if (! $connect)
+    return t('Email host %host does not seem valid, it does not answer', array('%host' => "$host"));
+
+  $from = variable_get('site_mail', ini_get('sendmail_from'));
+
+  $host = $_SERVEUR["HTTP_HOST"];
+  if (!$host) $host = 'localhost'; // that should be good enough
+
+  fputs($connect, "HELO $host\r\n");
+  $out  = fgets($connect, 1024);
+  fputs($connect, "MAIL FROM: <$from>\r\n");
+  $from = fgets($connect, 1024);
+  fputs($connect, "RCPT TO: <{$mail}>\r\n");
+  $to   = fgets($connect, 1024);
+  fputs($connect, "QUIT\r\n");
+  fclose($connect);
+
+  if (!ereg ("^250", $from)) {
+    // Again, something went wrong before we could really test the address,
+    // be on the safe side and accept it.
+    return;
+  }
+
+  if (ereg("Client host rejected", $to)) {
+    // This server does not like us, accept the email address
+    // (noos.fr behaves like this for instance)
+    return;
+  }
+
+  if (!ereg ("^250", $to )) {
+    return t('Email address %mail does not seem valid', array('%mail' => "$mail"));
+  }
+
+  // Everything OK
+  return;
+}
+
+
+function email_verify_menu() {
+  $items = array();
+  $items[] = array('path' => 'email_verify',
+		   'title' => t('Verify user emails'),
+		   'callback' => 'email_verify_checkall',
+		   'access' => user_access('access content'),
+		   'type' => MENU_CALLBACK);
+  return $items;
+}
+
+/**
+   Look though the whole user base for invalid emails.
+   Can be very long when hosts timeout.
+*/
+function email_verify_checkall()
+{
+  $content = "<table>";
+  $found = 0;
+
+  $result = db_query('SELECT uid,name,mail FROM drupal.users');
+  while ($row = db_fetch_object($result)) {
+    if (email_verify_check($row->mail)) {
+
+      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>$row->name</a><td>$row->mail";
+
+      if(++$found>=100) break;
+    }
+  }
+
+  $content .= "</table>";
+
+  print theme("page", $content);
+}
+
+// Local Variables:
+// mode: php
+// End:
+?>
