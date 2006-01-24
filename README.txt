@@ -31,15 +31,17 @@ users by Internet access providers). When in doub, we try to play it
 safe and rather accept some invalid addresses than to refuse valid
 ones.
 
-WORD OF CAUTION:
-This module is a work in progress, it is currently beta quality.
-Therefore, decide whether you want to rely on it yet. Please
-also send feedback to the author, both praise and constructive
-criticism, even patches! If the module does not make the right
-decision about a certain address, let me know so I can check it. If
-you can provide a detailed SMTP conversation to illustrate what is
-happening *from the machine hosting your site*, that will be most
-helpful. See below for known issues and things that can be improved.
+WORDS OF CAUTION:
+* This module is a work in progress, it is currently beta quality.
+  Therefore, decide whether you want to rely on it yet.
+* It has only been tested on Drupal 4.5.
+* Please send feedback to the author, both praise and constructive
+  criticism, even patches!
+* If the module does not make the right decision about a certain
+  address, let me know so I can check it. If you can provide a detailed
+  SMTP conversation to illustrate what is happening _from_the_machine
+  hosting_your_site, that will be most helpful.
+* See below for known issues and things that can be improved.
 
 Installation
 ------------
@@ -53,6 +55,12 @@ active from then on. Sit back, and enjoy getting ten times less of
 those email bounces and see more people succeed in registering to your
 site!
 
+If you see 'warning: fsockopen(): ...' output on your pages, make sure
+that you set 'Error reporting' on admin/settings to 'Write errors to
+the log'. You will still see such errors in the log. They indicate
+that an SMTP server did not respond (in which case the username was
+supposed valid).
+
 Things to do / Known problems
 -----------------------------
 The module should be configurable in how hard it tries to check. There
@@ -60,12 +68,6 @@ could be three levels:
 1) disabled
 2) only check the host part (fast and easy)
 3) check the whole address  (more thorough but tricky)
-
-When the connection to a SMTP server fails, warnings are (sometimes?)
-output on the page. They even sometime appear before the HTTP headers,
-which breaks the output. I tried different things to fix this, but
-they do not seem to work. Help is welcome, see the code around the
-fsockopen call in the source.
 
 Contact
 -------

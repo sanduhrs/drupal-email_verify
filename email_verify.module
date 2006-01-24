@@ -59,11 +59,7 @@ function email_verify_check($mail) {
   // Try to connect to one SMTP server
   foreach ($mxHosts as $smtpServer) {
 
-    // Try not to display connection errors, but they still seem to come thru
-    // help is needed here
-    $old = error_reporting(0);
     $connect = @fsockopen($smtpServer, 25, $errno, $errstr, 15);
-    error_reporting($old);
 
     if (!$connect) continue;
 
