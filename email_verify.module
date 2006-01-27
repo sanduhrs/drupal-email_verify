@@ -1,12 +1,18 @@
 <?php
+// $Id$
 
 // email_verify: Verifies thoroughly that email addresses are correctly entered
-//               during registration and account edition.
-//
+//               during registration and account edition
+
 // Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>
 // License:   GNU GPL v2 or later
 
-function email_verify_help($section='') {
+/**
+   Display help and module information
+   @param section which section of the site we're displaying help
+   @return help text for section
+*/
+function email_verify_help($section = '') {
   $output = '';
   switch ($section) {
     case "admin/modules#description":
@@ -17,8 +23,8 @@ function email_verify_help($section='') {
 }
 
 /**
- * Implementation of hook_user().
- */
+   Implementation of hook_user().
+*/
 function email_verify_user($type, &$edit, &$user, $category = NULL) {
   if ($type == 'validate' && $category == 'account') {
     return email_verify_edit_validate(arg(1), $edit);
@@ -34,6 +40,12 @@ function email_verify_edit_validate($uid, &$edit) {
   return $edit;
 }
 
+/**
+   Verifies whether the given mail address exists.
+   @param mail the email address to verify
+   @return NULL if the address exists, as far as we could check.
+           an error message if we found a problem with the address
+*/
 function email_verify_check($mail) {
   if (!valid_email_address($mail)) {
     // The address is syntactically incorrect.
@@ -127,8 +139,7 @@ function email_verify_menu() {
    Look though the whole user base for invalid emails.
    Can be very long when hosts timeout.
 */
-function email_verify_checkall()
-{
+function email_verify_checkall() {
   $content = "<table>";
   $found = 0;
 
@@ -150,4 +161,3 @@ function email_verify_checkall()
 // Local Variables:
 // mode: php
 // End:
-?>
