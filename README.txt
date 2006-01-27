@@ -32,9 +32,12 @@ safe and rather accept some invalid addresses than to refuse valid
 ones.
 
 WORDS OF CAUTION:
-* This module is a work in progress, it is currently beta quality.
-  Therefore, decide whether you want to rely on it yet.
-* It has only been tested on Drupal 4.5.
+* This module is a work in progress. It is currently beta quality
+  because it has not been extensively tested. Therefore, decide
+  whether you want to rely on it yet.
+* It has only been tested on Drupal 4.5, although according to the Drupal
+  documentation nothing has changed in 4.6 to stop it from working. Reports
+  about version compatibility are welcome.
 * Please send feedback to the author, both praise and constructive
   criticism, even patches!
 * If the module does not make the right decision about a certain
@@ -42,6 +45,7 @@ WORDS OF CAUTION:
   SMTP conversation to illustrate what is happening _from_the_machine
   hosting_your_site, that will be most helpful.
 * See below for known issues and things that can be improved.
+
 
 Installation
 ------------
@@ -61,6 +65,7 @@ the log'. You will still see such errors in the log. They indicate
 that an SMTP server did not respond (in which case the username was
 supposed valid).
 
+
 Things to do / Known problems
 -----------------------------
 The module should be configurable in how hard it tries to check. There
@@ -68,6 +73,14 @@ could be three levels:
 1) disabled
 2) only check the host part (fast and easy)
 3) check the whole address  (more thorough but tricky)
+
+When $_SERVEUR["HTTP_HOST"] is not set, we use "localhost" for the HELO
+command. Some SMTP servers might (incorrectly) reject us because of that.
+This means user names for those servers will not be checked.
+We should either find out a way to guess a full-fledged host name (but
+the local host name is often not good because it is a local network
+name) or offer to set it up in the module settings.
+
 
 Contact
 -------
