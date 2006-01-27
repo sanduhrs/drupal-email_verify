@@ -8,8 +8,8 @@ License:   GNU GPL v2 or later
 
 Description
 -----------
-This module provides advanced email address checking. The code of
-Drupal, by the user module, only performs syntactical checking of
+This module provides advanced email address checking. The core of
+Drupal, through the user module, only performs syntactical checking of
 user-entered email addresses, both during registration and account
 edition. This creates loads of problems when users incorrectly enter
 their address. First, they don't get any email from the site. If it
