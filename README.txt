@@ -74,13 +74,6 @@ could be three levels:
 2) only check the host part (fast and easy)
 3) check the whole address  (more thorough but tricky)
 
-When $_SERVEUR["HTTP_HOST"] is not set, we use "localhost" for the HELO
-command. Some SMTP servers might (incorrectly) reject us because of that.
-This means user names for those servers will not be checked.
-We should either find out a way to guess a full-fledged host name (but
-the local host name is often not good because it is a local network
-name) or offer to set it up in the module settings.
-
 
 Contact
 -------
