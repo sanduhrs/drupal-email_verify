@@ -93,6 +93,11 @@ function email_verify_check($mail) {
 
   $from = variable_get('site_mail', ini_get('sendmail_from'));
 
+  // Extract the <...> part if there is one
+  if (preg_match('/\<(.*)\>/', $from, $match) > 0) {
+    $from = $match[1];
+  }
+
   $localhost = $_SERVER["HTTP_HOST"];
   if (!$localhost) // Happens with HTTP/1.0
     //should be good enough for RFC compliant SMTP servers
