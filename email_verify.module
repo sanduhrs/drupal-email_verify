@@ -12,6 +12,7 @@
    @param section which section of the site we're displaying help
    @return help text for section
 */
+// TODO: remove this for Drupal 5.
 function email_verify_help($section = '') {
   $output = '';
   switch ($section) {
