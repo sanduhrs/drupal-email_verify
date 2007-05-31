@@ -12,12 +12,11 @@
    @param section which section of the site we're displaying help
    @return help text for section
 */
-// TODO: remove this for Drupal 5.
 function email_verify_help($section = '') {
   $output = '';
   switch ($section) {
-    case "admin/modules#description":
-      $output = t("Verifies thoroughly email addresses during registration and account edition.");
+    case '':
+      $output = '';
       break;
   }
   return $output;
