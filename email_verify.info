@@ -1,5 +1,4 @@
 ; $Id$
 name = Email verify
 description = Verifies thoroughly email addresses during registration and account edition.
-version = VERSION 
 
