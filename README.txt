@@ -1,4 +1,3 @@
-
 email_verify: Verifies thoroughly that email addresses are correctly entered
               during registration and account edition.
 
@@ -31,13 +30,9 @@ users by Internet access providers). When in doub, we try to play it
 safe and rather accept some invalid addresses than to refuse valid
 ones.
 
-WORDS OF CAUTION:
-* This module is a work in progress. It is currently beta quality
-  because it has not been extensively tested. Therefore, decide
-  whether you want to rely on it yet.
-* It has only been tested on Drupal 4.5, although according to the Drupal
-  documentation nothing has changed in 4.6 to stop it from working. Reports
-  about version compatibility are welcome.
+NOTES:
+* Provide any feedback on the issue queue:
+  http://drupal.org/project/issues/email_verify
 * Please send feedback to the author, both praise and constructive
   criticism, even patches!
 * If the module does not make the right decision about a certain
@@ -51,8 +46,10 @@ Installation
 ------------
 This module requires no database changes.
 
-To install, copy the email_verify.module to your module directory.
-You then need to go to admin/modules and check the Enabled box for
+Install like any other module: copy the whole email_verify directory 
+into the directory sites/all/modules/ or wherever you usually put contrib modules.
+
+You then need to go to admin/build/modules and check the Enabled box for
 email_verify, then save configuration. The module uses the hooks for
 user account validation. Therefore, email checking is automatically
 active from then on. Sit back, and enjoy getting ten times less of
@@ -60,7 +57,7 @@ those email bounces and see more people succeed in registering to your
 site!
 
 If you see 'warning: fsockopen(): ...' output on your pages, make sure
-that you set 'Error reporting' on admin/settings to 'Write errors to
+that you set 'Error reporting' on admin/settings/error-reporting to 'Write errors to
 the log'. You will still see such errors in the log. They indicate
 that an SMTP server did not respond (in which case the username was
 supposed valid).
@@ -68,11 +65,8 @@ supposed valid).
 
 Things to do / Known problems
 -----------------------------
-The module should be configurable in how hard it tries to check. There
-could be three levels:
-1) disabled
-2) only check the host part (fast and easy)
-3) check the whole address  (more thorough but tricky)
+See the module's issue queue:
+http://drupal.org/project/issues/email_verify
 
 
 Contact
