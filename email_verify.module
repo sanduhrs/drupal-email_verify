@@ -1,32 +1,29 @@
 <?php
 // $Id$
-
-// email_verify: Verifies thoroughly that email addresses are correctly entered
-//               during registration and account edition
-
-// Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>
-// License:   GNU GPL v2 or later
+/**
+ * @file
+ * Verifies thoroughly that email addresses are correctly entered
+ * Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>
+ * License:   GNU GPL v2 or later
+ */
 
 /**
-   Display help and module information
-   @param section which section of the site we're displaying help
-   @return help text for section
-*/
-function email_verify_help($section = '') {
-  $output = '';
-  switch ($section) {
-    case '':
-      $output = '';
-      break;
+ * Implementation of hook_help().
+ * @return
+ * Help text for section.
+ */
+function email_verify_help($path, $arg) {
+  if ($path == 'admin/help#email_verify') {
+    $txt = 'This module verifies that email addresses are valid during account registration or edit.';
+    return '<p>'. t($txt) .'</p>';
   }
-  return $output;
 }
 
 /**
-   Implementation of hook_user().
-*/
-function email_verify_user($type, &$edit, &$user, $category = NULL) {
-  if ($type == 'validate' && $category == 'account') {
+ * Implementation of hook_user().
+ */
+function email_verify_user($op, &$edit, &$account, $category = NULL) {
+  if ($op == 'validate' && $category == 'account') {
     return email_verify_edit_validate(arg(1), $edit);
   }
 }
@@ -36,137 +33,33 @@ function email_verify_edit_validate($uid, &$edit) {
   if ($error = email_verify_check($edit['mail'])) {
     form_set_error('mail', $error);
   }
-
   return $edit;
 }
 
 /**
-   Verifies whether the given mail address exists.
-   @param mail the email address to verify
-   @return NULL if the address exists, as far as we could check.
-           an error message if we found a problem with the address
-*/
+ * Verifies whether the given mail address exists.
+ * @param $mail
+ * Email address to verify.
+ * @return
+ * NULL if the address exists, or an error message if we found a problem with the address.
+ */
 function email_verify_check($mail) {
-  if (!valid_email_address($mail)) {
-    // The address is syntactically incorrect.
-    // The problem will be caught by the 'user' module anyway, so we avoid
-    // duplicating the error reporting here, just return.
-    return;
-  }
-
-  $host = substr(strchr($mail, '@'), 1);
-
-  // Let's see if we can find anything about this host in the DNS
-  if (!checkdnsrr($host, 'ANY')) {
-    return t('Email host %host does not seem valid', array('%host' => "$host"));
-  }
-
-  // What SMTP servers should we contact?
-  $mxHosts = array();
-  if (! getmxrr($host, $mxHosts)) {
-    // When there is no MX record, the host itself should be used
-    $mxHosts[] = $host;
-  }
-
-  // Try to connect to one SMTP server
-  foreach ($mxHosts as $smtpServer) {
-
-    $connect = @fsockopen($smtpServer, 25, $errno, $errstr, 15);
-
-    if (!$connect) continue;
-
-    if (ereg("^220", $out = fgets($connect, 1024))) {
-      // OK, we have a SMTP connection
-      break;
-    } else {
-      // The SMTP server probably does not like us
-      // (dynamic/residential IP for aol.com for instance)
-      // Be on the safe side and accept the address, at least it has a valid
-      // domain part...
-      watchdog('email_verify', "Could not verify email address at host $host: $out");
-      return;
-    }
-  }
-
-  if (! $connect)
-    return t('Email host %host does not seem valid, it does not answer', array('%host' => "$host"));
-
-  $from = variable_get('site_mail', ini_get('sendmail_from'));
-
-  // Extract the <...> part if there is one
-  if (preg_match('/\<(.*)\>/', $from, $match) > 0) {
-    $from = $match[1];
-  }
-
-  $localhost = $_SERVER["HTTP_HOST"];
-  if (!$localhost) // Happens with HTTP/1.0
-    //should be good enough for RFC compliant SMTP servers
-    $localhost = 'localhost';
-
-  fputs($connect, "HELO $localhost\r\n");
-  $out  = fgets($connect, 1024);
-  fputs($connect, "MAIL FROM: <$from>\r\n");
-  $from = fgets($connect, 1024);
-  fputs($connect, "RCPT TO: <{$mail}>\r\n");
-  $to   = fgets($connect, 1024);
-  fputs($connect, "QUIT\r\n");
-  fclose($connect);
-
-  if (!ereg ("^250", $from)) {
-    // Again, something went wrong before we could really test the address,
-    // be on the safe side and accept it.
-    watchdog('email_verify', "Could not verify email address at host $host: $from");
-    return;
-  }
-
-  if (ereg("(Client host|Helo command) rejected", $to)) {
-    // This server does not like us, accept the email address
-    // (noos.fr behaves like this for instance)
-    watchdog('email_verify', "Could not verify email address at host $host: $to");
-    return;
-  }
-
-  if (!ereg ("^250", $to )) {
-    watchdog('email_verify', "Rejected email address: $mail. Reason: $to");
-    return t('Email address %mail does not seem valid', array('%mail' => "$mail"));
-  }
-
-  // Everything OK
-  return;
-}
-
-
-function email_verify_menu() {
-  $items = array();
-  $items[] = array('path' => 'email_verify',
-		   'title' => t('Verify user emails'),
-		   'callback' => 'email_verify_checkall',
-		   'access' => user_access('access content'),
-		   'type' => MENU_CALLBACK);
-  return $items;
+  include_once dirname(__FILE__) .'/email_verify.inc.php';
+  return _email_verify_check($mail);
 }
 
 /**
-   Look though the whole user base for invalid emails.
-   Can be very long when hosts timeout.
-*/
-function email_verify_checkall() {
-  $content = "<table>";
-  $found = 0;
-
-  $result = db_query('SELECT uid,name,mail FROM {users}');
-  while ($row = db_fetch_object($result)) {
-    if (email_verify_check($row->mail)) {
-
-      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>$row->name</a><td>$row->mail";
-
-      if(++$found>=100) break;
-    }
-  }
-
-  $content .= "</table>";
-
-  print theme("page", $content);
+ * Implementation of hook_menu().
+ */
+function email_verify_menu() {
+  $items['email_verify'] = array(
+    'title' => 'Verify user emails',
+    'page callback' => 'email_verify_checkall',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'email_verify.check.inc',
+  );
+  return $items;
 }
 
 // Local Variables:

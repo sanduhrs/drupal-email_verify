@@ -1,5 +1,9 @@
 <?php
 // $Id$
+/**
+ * @file
+ * Install the email verify module
+ */
 
 /**
  * Implementation of hook_enable().
@@ -18,15 +22,16 @@ function email_verify_enable() {
 
   $host = 'drupal.org';
   // What SMTP servers should we contact?
-  $mxHosts = array();
-  if (! getmxrr($host, $mxHosts)) {
+  $mx_hosts = array();
+
+  if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used
-    $mxHosts[] = $host;
+    $mx_hosts[] = $host;
   }
 
   // Try to connect to one SMTP server
-  foreach ($mxHosts as $smtpServer) {
-    $connect = @fsockopen($smtpServer, 25, $errno, $errstr, 15);
+  foreach ($mx_hosts as $smtp) {
+    $connect = @fsockopen($smtp, 25, $errno, $errstr, 15);
     if (!$connect) {
       continue;
     }
@@ -39,11 +44,10 @@ function email_verify_enable() {
   }
 
   if (!$connect) {
-    $message = t(
-      'Email_verify.module has tried contacting the mail host @drupal.org, but didn\'t receive any reply.<br />
-      Check with your hosting provider that the function fscokopen() is properly configured on your server,
-      and that the port 25 is open.<br />
-      <strong>The module email_verify has been disabled.</strong>');
+    $message = t('Email verify has tried contacting the mail host but did not receive a reply.'
+      .' Check with your hosting provider that the function fscokopen() is properly configured on your server,'
+      .' and that port 25 is open. The module has been disabled.');
+
     watchdog('email_verify', $message, WATCHDOG_ERROR);
     drupal_set_message($message, 'error');
     module_disable(array('email_verify'));

@@ -1,4 +1,11 @@
 ; $Id$
-name = Email verify
-description = Verifies thoroughly email addresses during registration and account edition.
+name = "Email verify"
+description = "Verifies email addresses during registration and account edit."
+core = 6.x
+package = Registration
+dependencies[] = user
 
+; Information added by drupal.org packaging script on 2008-07-26
+version = "6.x-1.x"
+project = "email_verify"
+datestamp = "1217075417"
