@@ -45,7 +45,7 @@ function email_verify_enable() {
 
   if (!$connect) {
     $message = t('Email verify has tried contacting the mail host but did not receive a reply.'
-      .' Check with your hosting provider that the function fscokopen() is properly configured on your server,'
+      .' Check with your hosting provider that the function fsockopen() is properly configured on your server,'
       .' and that port 25 is open. The module has been disabled.');
 
     watchdog('email_verify', $message, WATCHDOG_ERROR);
