@@ -78,9 +78,17 @@ function _email_verify_check($mail) {
     return;
   }
 
-  if (ereg("(Client host|Helo command) rejected", $to)) {
-    // This server does not like us, accept the email address
-    // (noos.fr behaves like this for instance)
+  if (
+      // This server does not like us
+      // (noos.fr behaves like this for instance)
+      ereg("(Client host|Helo command) rejected", $to) ||
+
+      // Any 4xx error also means we couldn't really check
+      // except 450, which is explcitely a non-existing mailbox:
+      // 450 = "Requested mail action not taken: mailbox unavailable"
+      ereg("^4", $to) && !ereg("^450", $to)) {
+
+    // In those cases, accept the email, but log a warning
     watchdog('email_verify', "Could not verify email address at host $host: $to");
     return;
   }
