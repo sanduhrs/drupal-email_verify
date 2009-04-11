@@ -24,6 +24,13 @@ function email_verify_enable() {
   // What SMTP servers should we contact?
   $mx_hosts = array();
 
+  // checkdnsrr and getmxrr were added to Windows platform in PHP 5.3 
+  // http://www.php.net/checkdnsrr http://www.php.net/manual/en/function.getmxrr.php
+  if (stristr(PHP_OS, 'WIN') && PHP_VERSION < 5.3) {
+    drupal_set_message(t('Email Verify could not contact the mail host because the server is running on Windows with a version of PHP below 5.3. The module can be enabled, but will not perform any address checking.'), 'warning');
+    return;
+  }
+
   if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used
     $mx_hosts[] = $host;
