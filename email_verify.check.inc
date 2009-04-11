@@ -25,6 +25,6 @@ function email_verify_checkall() {
 
   $content .= "</table>";
 
-  unset($found, $result, $row) // Destroy variables
+  unset($found, $result, $row); // Destroy variables
   print theme("page", $content);
 }

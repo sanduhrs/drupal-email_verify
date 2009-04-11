@@ -52,11 +52,11 @@ function email_verify_check($mail) {
  * Implementation of hook_menu().
  */
 function email_verify_menu() {
-  $items['email_verify'] = array(
-    'title' => 'Verify user emails',
+  $items['admin/user/user/email_verify'] = array(
+    'title' => 'Email Verify',
     'page callback' => 'email_verify_checkall',
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer users'),
+    'type' => MENU_LOCAL_TASK, 
     'file' => 'email_verify.check.inc',
   );
   return $items;
