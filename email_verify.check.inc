@@ -17,7 +17,7 @@ function email_verify_checkall() {
   while ($row = db_fetch_object($result)) {
     if (email_verify_check($row->mail)) {
 
-      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>$row->name</a><td>$row->mail";
+      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>". check_plain($row->name) ."</a><td>". check_plain($row->mail);
 
       if (++$found >= 100) break;
     }
