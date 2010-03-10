@@ -12,12 +12,7 @@ function _email_verify_check($mail) {
     return;
   }
 
-  // checkdnsrr and getmxrr were added to Windows platform in PHP 5.3 
-  // http://www.php.net/checkdnsrr http://www.php.net/manual/en/function.getmxrr.php
-  if (stristr(PHP_OS, 'WIN') && PHP_VERSION < 5.3) {
-    drupal_set_message(t('Email Verify could not check the address because the server is running on Windows with a version of PHP below 5.3.'), 'warning');
-    return;
-  }
+  include_once dirname(__FILE__) .'/windows_compat.inc';
 
   $host = substr(strchr($mail, '@'), 1);
 
