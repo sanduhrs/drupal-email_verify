@@ -24,6 +24,8 @@ function email_verify_enable() {
   // What SMTP servers should we contact?
   $mx_hosts = array();
 
+  include_once dirname(__FILE__) .'/windows_compat.inc';
+
   if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used
     $mx_hosts[] = $host;
@@ -54,3 +56,6 @@ function email_verify_enable() {
   }
 }
 
+// Local Variables:
+// mode: php
+// End:

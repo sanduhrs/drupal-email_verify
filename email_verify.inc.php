@@ -12,6 +12,8 @@ function _email_verify_check($mail) {
     return;
   }
 
+  include_once dirname(__FILE__) .'/windows_compat.inc';
+
   $host = substr(strchr($mail, '@'), 1);
 
   // Let's see if we can find anything about this host in the DNS
