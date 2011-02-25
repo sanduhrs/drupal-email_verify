@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * User email check menu callback file for email_verify module.

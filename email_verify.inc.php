@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Check the email for email_verify module.
