@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Verifies thoroughly that email addresses are correctly entered

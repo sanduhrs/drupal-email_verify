@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Install the email verify module
