@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 // email_verify: Verifies thoroughly that email addresses are correctly entered
 //               during registration and account edition
