@@ -6,6 +6,7 @@
 
 /**
  * Menu callback; look though the whole user base for invalid emails.
+ *
  * Can be very long when hosts timeout.
  */
 function email_verify_checkall() {
@@ -16,14 +17,21 @@ function email_verify_checkall() {
   while ($row = db_fetch_object($result)) {
     if (email_verify_check($row->mail)) {
 
-      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>". check_plain($row->name) ."</a><td>". check_plain($row->mail);
+      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>" . check_plain($row->name) . "</a><td>" . check_plain($row->mail);
 
-      if (++$found >= 100) break;
+      if (++$found >= 100) {
+        break;
+      }
     }
   }
 
   $content .= "</table>";
 
-  unset($found, $result, $row); // Destroy variables
-  print theme("page", $content);
+  // Destroy variables.
+  unset($found, $result, $row);
+
+  // TODO Please change this theme call as discussed at
+  // http://drupal.org/node/224333#theme_page.
+  // print theme("page", $content);
+  print $content;
 }

@@ -1,5 +1,5 @@
 name = "Email verify"
 description = "Verifies email addresses during registration and account edit."
-core = 6.x
+core = 7.x
 package = Registration
 dependencies[] = user

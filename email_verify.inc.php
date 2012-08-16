@@ -3,6 +3,10 @@
  * @file
  * Check the email for email_verify module.
  */
+
+/**
+ * Checks the email address for validity.
+ */
 function _email_verify_check($mail) {
   if (!valid_email_address($mail)) {
     // The address is syntactically incorrect.
@@ -11,11 +15,11 @@ function _email_verify_check($mail) {
     return;
   }
 
-  include_once dirname(__FILE__) .'/windows_compat.inc';
+  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/windows_compat.inc';
 
-  $host = substr(strchr($mail, '@'), 1);
+  $host = drupal_substr(strchr($mail, '@'), 1);
 
-  // Let's see if we can find anything about this host in the DNS
+  // Let's see if we can find anything about this host in the DNS.
   if (!checkdnsrr($host, 'ANY')) {
     return t('Email host %host invalid, please retry.', array('%host' => "$host"));
   }
@@ -23,19 +27,21 @@ function _email_verify_check($mail) {
   // What SMTP servers should we contact?
   $mx_hosts = array();
   if (!getmxrr($host, $mx_hosts)) {
-    // When there is no MX record, the host itself should be used
+    // When there is no MX record, the host itself should be used.
     $mx_hosts[] = $host;
   }
 
-  // Try to connect to one SMTP server
+  // Try to connect to one SMTP server.
   foreach ($mx_hosts as $smtp) {
 
     $connect = @fsockopen($smtp, 25, $errno, $errstr, 15);
 
-    if (!$connect) continue;
+    if (!$connect) {
+      continue;
+    }
 
-    if (ereg("^220", $out = fgets($connect, 1024))) {
-      // OK, we have a SMTP connection
+    if (preg_match("/^220/", $out = fgets($connect, 1024))) {
+      // OK, we have a SMTP connection.
       break;
     }
     else {
@@ -48,57 +54,56 @@ function _email_verify_check($mail) {
     }
   }
 
-  if (!$connect)
+  if (!$connect) {
     return t('Email host %host is invalid, please contact us for clarification.', array('%host' => "$host"));
+  }
 
   $from = variable_get('site_mail', ini_get('sendmail_from'));
 
-  // Extract the <...> part if there is one
+  // Extract the <...> part, if there is one.
   if (preg_match('/\<(.*)\>/', $from, $match) > 0) {
     $from = $match[1];
   }
 
+  // Should be good enough for RFC compliant SMTP servers.
   $localhost = $_SERVER["HTTP_HOST"];
-  if (!$localhost) // Happens with HTTP/1.0
-    //should be good enough for RFC compliant SMTP servers
+  if (!$localhost) {
     $localhost = 'localhost';
+  }
 
   fputs($connect, "HELO $localhost\r\n");
-  $out  = fgets($connect, 1024);
+  $out = fgets($connect, 1024);
   fputs($connect, "MAIL FROM: <$from>\r\n");
   $from = fgets($connect, 1024);
   fputs($connect, "RCPT TO: <{$mail}>\r\n");
-  $to   = fgets($connect, 1024);
+  $to = fgets($connect, 1024);
   fputs($connect, "QUIT\r\n");
   fclose($connect);
 
-  if (!ereg ("^250", $from)) {
-    // Again, something went wrong before we could really test the address,
-    // be on the safe side and accept it.
+  if (!preg_match("/^250/", $from)) {
+    // Again, something went wrong before we could really test the address.
+    // Be on the safe side and accept it.
     watchdog('email_verify', "Could not verify email address at host $host: $from");
     return;
   }
 
   if (
-      // This server does not like us
-      // (noos.fr behaves like this for instance)
-      ereg("(Client host|Helo command) rejected", $to) ||
-
-      // Any 4xx error also means we couldn't really check
-      // except 450, which is explcitely a non-existing mailbox:
-      // 450 = "Requested mail action not taken: mailbox unavailable"
-      ereg("^4", $to) && !ereg("^450", $to)) {
-
-    // In those cases, accept the email, but log a warning
+      // This server does not like us (noos.fr behaves like this for instance).
+      preg_match("/(Client host|Helo command) rejected/", $to) ||
+      // Any 4xx error also means we couldn't really check except 450, which is
+      // explcitely a non-existing mailbox: 450 = "Requested mail action not
+      // taken: mailbox unavailable".
+      preg_match("/^4/", $to) && !preg_match("/^450/", $to)) {
+    // In those cases, accept the email, but log a warning.
     watchdog('email_verify', "Could not verify email address at host $host: $to");
     return;
   }
 
-  if (!ereg ("^250", $to)) {
+  if (!preg_match("/^250/", $to)) {
     watchdog('email_verify', "Rejected email address: $mail. Reason: $to");
     return t('%mail is invalid, please contact us for clarification.', array('%mail' => "$mail"));
   }
 
-  // Everything OK
+  // Everything is OK, so don't return anything.
   return;
 }
