@@ -24,6 +24,12 @@ function _email_verify_check($mail) {
     return t('Email host %host invalid, please retry.', array('%host' => "$host"));
   }
 
+  // If install found port 25 closed or fsockopen() disabled, we can't test
+  // mailboxes.
+  If (variable_get('email_verify_skip_mailbox', FALSE)) {
+    return;
+  }
+
   // What SMTP servers should we contact?
   $mx_hosts = array();
   if (!getmxrr($host, $mx_hosts)) {
