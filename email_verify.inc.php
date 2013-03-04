@@ -55,7 +55,7 @@ function _email_verify_check($mail) {
       // (dynamic/residential IP for aol.com for instance)
       // Be on the safe side and accept the address, at least it has a valid
       // domain part...
-      watchdog('email_verify', "Could not verify email address at host $host: $out");
+      watchdog('email_verify', 'Could not verify email address at host @host: @out', array('@host' => $host, '@out' => $out));
       return;
     }
   }
@@ -89,7 +89,7 @@ function _email_verify_check($mail) {
   if (!preg_match("/^250/", $from)) {
     // Again, something went wrong before we could really test the address.
     // Be on the safe side and accept it.
-    watchdog('email_verify', "Could not verify email address at host $host: $from");
+    watchdog('email_verify', 'Could not verify email address at host @host: @from', array('@host' => $host, '@from' => $from));
     return;
   }
 
@@ -101,12 +101,12 @@ function _email_verify_check($mail) {
       // taken: mailbox unavailable".
       preg_match("/^4/", $to) && !preg_match("/^450/", $to)) {
     // In those cases, accept the email, but log a warning.
-    watchdog('email_verify', "Could not verify email address at host $host: $to");
+    watchdog('email_verify', 'Could not verify email address at host @host: @to', array('@host' => $host, '@to' => $to));
     return;
   }
 
   if (!preg_match("/^250/", $to)) {
-    watchdog('email_verify', "Rejected email address: $mail. Reason: $to");
+    watchdog('email_verify', 'Rejected email address: $mail. Reason: @to', array('@mail' => $mail, '@to' => $to));
     return t('%mail is invalid, please contact us for clarification.', array('%mail' => "$mail"));
   }
 
