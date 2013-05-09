@@ -106,7 +106,7 @@ function _email_verify_check($mail) {
   }
 
   if (!preg_match("/^250/", $to)) {
-    watchdog('email_verify', 'Rejected email address: $mail. Reason: @to', array('@mail' => $mail, '@to' => $to));
+    watchdog('email_verify', 'Rejected email address: @mail. Reason: @to', array('@mail' => $mail, '@to' => $to));
     return t('%mail is invalid, please contact us for clarification.', array('%mail' => "$mail"));
   }
 
