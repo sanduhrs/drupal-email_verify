@@ -17,25 +17,71 @@ function email_verify_help($path, $arg) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_menu().
+ */
+function email_verify_menu() {
+  $items = array();
+  $items['admin/user/user/email_verify'] = array(
+    'title' => 'Email Verify',
+    'page callback' => 'email_verify_checkall',
+    'access arguments' => array('administer users'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'email_verify.check.inc',
+  );
+  $items['admin/config/system/email_verify'] = array(
+    'title' => 'Email Verify',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('email_verify_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'description' => "Configure the Email Verify module's administrative settings.",
+    'file' => 'email_verify.admin.inc',
+  );
+  return $items;
+}
+
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the user_register form.
  */
 function email_verify_form_user_register_form_alter(&$form, &$form_state, $form_id) {
-  $form['#validate'][] = 'email_verify_edit_validate';
+  if (variable_get('email_verify_user_registration', 1)) {
+    $form['#validate'][] = 'email_verify_edit_validate';
+  }
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter() for the user_profile form.
  */
 function email_verify_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  $form['#validate'][] = 'email_verify_edit_validate';
+  if (variable_get('email_verify_user_profile', 1)) {
+    $form['#validate'][] = 'email_verify_edit_validate';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the contact_site form.
+ */
+function email_verify_form_contact_site_form_alter(&$form, &$form_state, $form_id) {
+  if (module_exists('contact') && variable_get('email_verify_site_contact', 0)) {
+    $form['#validate'][] = 'email_verify_edit_validate';
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for the contact_personal form.
+ */
+function email_verify_form_contact_personal_form_alter(&$form, &$form_state, $form_id) {
+  if (module_exists('contact') && variable_get('email_verify_personal_contact', 0)) {
+    $form['#validate'][] = 'email_verify_edit_validate';
+  }
 }
 
 /**
  * Additional vaidation for the user form.
  *
- * @param form_id
- *   The form ID of the passed form.
- * @param $form_state
+ * @param array $form
+ *   The form definition.
+ * @param array $form_state
  *   The form values which you may perform validation on.
  */
 function email_verify_edit_validate($form, &$form_state) {
@@ -48,7 +94,7 @@ function email_verify_edit_validate($form, &$form_state) {
 /**
  * Verifies whether the given mail address exists.
  *
- * @param $mail
+ * @param string $mail
  *   Email address to verify.
  *
  * @return string
@@ -59,21 +105,3 @@ function email_verify_check($mail) {
   include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/email_verify.inc.php';
   return _email_verify_check($mail);
 }
-
-/**
- * Implements hook_menu().
- */
-function email_verify_menu() {
-  $items['admin/user/user/email_verify'] = array(
-    'title' => 'Email Verify',
-    'page callback' => 'email_verify_checkall',
-    'access arguments' => array('administer users'),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'email_verify.check.inc',
-  );
-  return $items;
-}
-
-// Local Variables:
-// mode: php
-// End:
