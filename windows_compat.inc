@@ -1,4 +1,4 @@
-
+<?php
 // Definitions for missing functions in Windows (bah)
 // See: http://drupal.org/node/508004
 
@@ -46,7 +46,7 @@ if(!function_exists('checkdnsrr')){
             foreach(new RegexIterator($it, '~^'.$host.'~', RegexIterator::GET_MATCH) as $result){
                 if($result){
                     return true;
-                }                
+                }
             }
         }
         return false;
