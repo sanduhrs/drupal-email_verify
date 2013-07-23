@@ -21,7 +21,7 @@ function email_verify_help($path, $arg) {
  */
 function email_verify_menu() {
   $items = array();
-  $items['admin/user/user/email_verify'] = array(
+  $items['admin/people/email_verify'] = array(
     'title' => 'Email Verify',
     'page callback' => 'email_verify_checkall',
     'access arguments' => array('administer users'),
