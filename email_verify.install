@@ -20,11 +20,6 @@ function email_verify_enable() {
   //    initial setup, etc."
   // However, this does not seem to be the case, so we can't reuse
   // email_verify_check().
-  $host = 'drupal.org';
-  // What SMTP servers should we contact?
-  $mx_hosts = array();
-
-  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/windows_compat.inc';
 
   // If a previous enable found port 25 closed or fsockopen() disabled, don't
   // test it again. Testing can cause a long delay on module enable. Completely
@@ -41,6 +36,12 @@ function email_verify_enable() {
     drupal_set_message($message, 'warning');
     return;
   }
+
+  $host = 'drupal.org';
+  // What SMTP servers should we contact?
+  $mx_hosts = array();
+
+  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/windows_compat.inc';
 
   if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used.
