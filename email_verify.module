@@ -102,6 +102,6 @@ function email_verify_edit_validate($form, &$form_state) {
  *   the address.
  */
 function email_verify_check($mail) {
-  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/email_verify.inc.php';
+  module_load_include('php', 'email_verify', 'email_verify.inc');
   return _email_verify_check($mail);
 }

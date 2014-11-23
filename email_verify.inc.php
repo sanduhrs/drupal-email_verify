@@ -15,7 +15,7 @@ function _email_verify_check($mail) {
     return;
   }
 
-  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/windows_compat.inc';
+  module_load_include('inc', 'email_verify', 'windows_compat');
 
   $host = drupal_substr(strchr($mail, '@'), 1);
 

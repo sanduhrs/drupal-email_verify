@@ -41,7 +41,7 @@ function email_verify_enable() {
   // What SMTP servers should we contact?
   $mx_hosts = array();
 
-  include_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'email_verify') . '/windows_compat.inc';
+  module_load_include('inc', 'email_verify', 'windows_compat');
 
   if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used.
