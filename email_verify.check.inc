@@ -10,29 +10,17 @@
  * Can be very long when hosts timeout.
  */
 function email_verify_checkall() {
-  $content = "<table>";
-  $found = 0;
+  $header = array('User Id', 'Name', 'Email');
+  $rows = array();
 
   $results = db_select('users', 'u')
     ->fields('u', array('uid', 'name', 'mail'))
     ->execute();
   foreach ($results as $row) {
     if (email_verify_check($row->mail)) {
-      $content .= "<tr><td><a href='?q=user/$row->uid/edit'>" . check_plain($row->name) . "</a><td>" . check_plain($row->mail);
-
-      if (++$found >= 100) {
-        break;
-      }
+      $rows[] = array( $row->uid, $row->name, $row->mail, );
     }
   }
 
-  $content .= "</table>";
-
-  // Destroy variables.
-  unset($found, $result, $row);
-
-  // TODO Please change this theme call as discussed at
-  // http://drupal.org/node/224333#theme_page.
-  // print theme("page", $content);
-  print $content;
+  return theme('table', array('header' => $header, 'rows'=> $rows));
 }
