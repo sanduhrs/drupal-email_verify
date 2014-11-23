@@ -77,6 +77,18 @@ function email_verify_form_contact_personal_form_alter(&$form, &$form_state, $fo
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * For the Entity Registration module's Registration Form.
+ * https://www.drupal.org/project/registration
+ */
+function email_verify_form_registration_form_alter(&$form, &$form_state, $form_id) {
+  if (variable_get('email_verify_user_registration', 1)) {
+    $form['#validate'][] = 'email_verify_edit_validate';
+  }
+}
+
+/**
  * Additional vaidation for the user form.
  *
  * @param array $form
