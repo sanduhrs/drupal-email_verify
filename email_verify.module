@@ -17,6 +17,18 @@ function email_verify_help($path, $arg) {
 }
 
 /**
+ * Implements hook_permission().
+ */
+function email_verify_permission() {
+  return array(
+    'bypass email verification' => array(
+      'title' => t('Bypass email verification'),
+      'description' => t('Allow email verification to be bypassed when performing user operations.'),
+    ),
+  );
+}
+
+/**
  * Implements hook_menu().
  */
 function email_verify_menu() {
@@ -107,8 +119,8 @@ function email_verify_form_registration_form_alter(&$form, &$form_state, $form_i
  *   The form values which you may perform validation on.
  */
 function email_verify_edit_validate($form, &$form_state) {
-  if ($form_state['values']['op'] != t('Cancel account')) {
-    // Validate the e-mail address:
+  if (!user_access('bypass email verification') && $form_state['values']['op'] != t('Cancel account')) {
+    // Validate the e-mail address.
     if ($error = email_verify_check($form_state['input']['mail'])) {
       form_set_error('mail', $error);
     }
