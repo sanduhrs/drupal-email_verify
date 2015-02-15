@@ -18,7 +18,12 @@ function email_verify_checkall() {
     ->execute();
   foreach ($results as $row) {
     if (email_verify_check($row->mail)) {
-      $rows[] = array( $row->uid, $row->name, $row->mail, );
+      $link = l($row->name, 'user/' . $row->uid);
+      $rows[] = array(
+        $row->uid,
+        $link,
+        $row->mail
+      );
     }
   }
 
