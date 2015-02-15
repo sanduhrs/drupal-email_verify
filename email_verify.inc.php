@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Check the email for email_verify module.
+ * Checks the email address for validity.
  */
 
 /**
@@ -21,7 +21,7 @@ function _email_verify_check($mail) {
 
   // Let's see if we can find anything about this host in the DNS.
   if (!checkdnsrr($host, 'ANY')) {
-    return t('Email host %host invalid, please retry.', array('%host' => "$host"));
+    return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
   }
 
   // If install found port 25 closed or fsockopen() disabled, we can't test
@@ -47,21 +47,21 @@ function _email_verify_check($mail) {
     }
 
     if (preg_match("/^220/", $out = fgets($connect, 1024))) {
-      // OK, we have a SMTP connection.
+      // An SMTP connection was made.
       break;
     }
     else {
-      // The SMTP server probably does not like us
-      // (dynamic/residential IP for aol.com for instance)
+      // The SMTP server probably does not like us (dynamic/residential IP for
+      // aol.com for instance).
       // Be on the safe side and accept the address, at least it has a valid
-      // domain part...
+      // domain part.
       watchdog('email_verify', 'Could not verify email address at host @host: @out', array('@host' => $host, '@out' => $out));
       return;
     }
   }
 
   if (!$connect) {
-    return t('Email host %host is invalid, please contact us for clarification.', array('%host' => "$host"));
+    return t('%host is not a valid email host. Please check the spelling and try again or contact us for clarification.', array('%host' => "$host"));
   }
 
   $from = variable_get('site_mail', ini_get('sendmail_from'));
@@ -107,7 +107,7 @@ function _email_verify_check($mail) {
 
   if (!preg_match("/^250/", $to)) {
     watchdog('email_verify', 'Rejected email address: @mail. Reason: @to', array('@mail' => $mail, '@to' => $to));
-    return t('%mail is invalid, please contact us for clarification.', array('%mail' => "$mail"));
+    return t('%mail is not a valid email address. Please check the spelling and try again or contact us for clarification.', array('%mail' => "$mail"));
   }
 
   // Everything is OK, so don't return anything.
