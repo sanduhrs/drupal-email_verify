@@ -5,76 +5,21 @@
  */
 
 /**
- * Implements hook_enable().
+ * Implements hook_install().
+ *
+ * Display a message to the admin about enabling this module.
  */
-function email_verify_enable() {
-  // Check that fsockopen() works on port 25.
-  // See: http://drupal.org/node/147883
-
-  // What follows is an adapted version of email_verify_check().
-  // The documentation http://api.drupal.org/api/5/function/hook_install says:
-  //   "Note that since this function is called from a full bootstrap, all
-  //    functions (including those in modules enabled by the current page
-  //    request) are available when this hook is called. Use cases could be
-  //    displaying a user message, or calling a module function necessary for
-  //    initial setup, etc."
-  // However, this does not seem to be the case, so we can't reuse
-  // email_verify_check().
-
-  // If a previous enable found port 25 closed or fsockopen() disabled, don't
-  // test it again. Testing can cause a long delay on module enable. Completely
-  // uninstall and then re-install this module to re-test.
-  If (variable_get('email_verify_skip_mailbox', FALSE)) {
-    return;
-  }
-
-  // Check if fsockopen() is disabled.
-  // http://www.php.net/manual/en/function.function-exists.php#67947
-  if (!function_exists('fsockopen')) {
-    $message = t('Email Verify will test email domains but not mailboxes because your host has disabled the function fsockopen() for security.');
-    variable_set('email_verify_skip_mailbox', TRUE);
-    drupal_set_message($message, 'warning');
-    return;
-  }
-
-  $host = 'drupal.org';
-  // What SMTP servers should we contact?
-  $mx_hosts = array();
-
-  module_load_include('inc', 'email_verify', 'windows_compat');
-
-  if (!getmxrr($host, $mx_hosts)) {
-    // When there is no MX record, the host itself should be used.
-    $mx_hosts[] = $host;
-  }
-
-  // Try to connect to one SMTP server.
-  foreach ($mx_hosts as $smtp) {
-    $connect = @fsockopen($smtp, 25, $errno, $errstr, 15);
-    if (!$connect) {
-      continue;
-    }
-
-    if (preg_match("/^220/", $out = fgets($connect, 1024))) {
-      // OK, we have a SMTP connection.
-      break;
-    }
-
-  }
-
-  if (!$connect) {
-    variable_set('email_verify_skip_mailbox', TRUE);
-    $message = t('Email Verify will test email domains but not mailboxes because port 25 is closed on your host\'s firewall for security.');
-    watchdog('email_verify', $message, array(), WATCHDOG_WARNING);
-    drupal_set_message($message, 'warning');
-  }
+function email_verify_install() {
+  $link = l('administrative settings page', 'admin/config/system/email_verify');
+  $message = t('The Email Verify module has been installed. Before it can be used, it must be enabled and configured on its !adminpage.', array('!adminpage' => $link));
+  drupal_set_message($message);
 }
 
-
 /**
- * Remove variables on uninstall.
+ * Implements hook_uninstall().
+ *
+ * Removes variables created by this module.
  */
 function email_verify_uninstall() {
   db_query("DELETE FROM {variable} WHERE name LIKE 'email_verify_%'");
-  cache_clear_all('variables', 'cache');
 }
