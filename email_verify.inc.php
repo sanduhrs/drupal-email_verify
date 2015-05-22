@@ -20,7 +20,7 @@ function _email_verify_check($mail) {
   $host = drupal_substr(strchr($mail, '@'), 1);
 
   // Let's see if we can find anything about this host in the DNS.
-  if (!checkdnsrr($host, 'ANY')) {
+  if (!checkdnsrr($host . '.', 'ANY')) {
     return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
   }
 
