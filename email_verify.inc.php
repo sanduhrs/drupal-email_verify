@@ -39,7 +39,10 @@ function _email_verify_check($mail) {
 
   // Try to connect to one SMTP server.
   foreach ($mx_hosts as $smtp) {
-
+    /**
+     * @todo
+     *   This needs to be examined and possibly corrected.
+     */
     $connect = @fsockopen($smtp, 25, $errno, $errstr, 15);
 
     if (!$connect) {
@@ -55,7 +58,7 @@ function _email_verify_check($mail) {
       // aol.com for instance).
       // Be on the safe side and accept the address, at least it has a valid
       // domain part.
-      watchdog('email_verify', 'Could not verify email address at host @host: @out', array('@host' => $host, '@out' => $out));
+      watchdog('email_verify', 'Could not verify email address at host @host: @out', array('@host' => $host, '@out' => $out), WATCHDOG_WARNING);
       return;
     }
   }
@@ -77,6 +80,7 @@ function _email_verify_check($mail) {
     $localhost = 'localhost';
   }
 
+  // Conduct the test.
   fputs($connect, "HELO $localhost\r\n");
   $out = fgets($connect, 1024);
   fputs($connect, "MAIL FROM: <$from>\r\n");
@@ -86,13 +90,13 @@ function _email_verify_check($mail) {
   fputs($connect, "QUIT\r\n");
   fclose($connect);
 
+  // Check the results.
   if (!preg_match("/^250/", $from)) {
     // Again, something went wrong before we could really test the address.
     // Be on the safe side and accept it.
-    watchdog('email_verify', 'Could not verify email address at host @host: @from', array('@host' => $host, '@from' => $from));
+    watchdog('email_verify', 'Could not verify email address at host @host: @from', array('@host' => $host, '@from' => $from), WATCHDOG_WARNING);
     return;
   }
-
   if (
       // This server does not like us (noos.fr behaves like this for instance).
       preg_match("/(Client host|Helo command) rejected/", $to) ||
@@ -101,12 +105,11 @@ function _email_verify_check($mail) {
       // taken: mailbox unavailable".
       preg_match("/^4/", $to) && !preg_match("/^450/", $to)) {
     // In those cases, accept the email, but log a warning.
-    watchdog('email_verify', 'Could not verify email address at host @host: @to', array('@host' => $host, '@to' => $to));
+    watchdog('email_verify', 'Could not verify email address at host @host: @to', array('@host' => $host, '@to' => $to), WATCHDOG_WARNING);
     return;
   }
-
   if (!preg_match("/^250/", $to)) {
-    watchdog('email_verify', 'Rejected email address: @mail. Reason: @to', array('@mail' => $mail, '@to' => $to));
+    watchdog('email_verify', 'Rejected email address: @mail. Reason: @to', array('@mail' => $mail, '@to' => $to), WATCHDOG_WARNING);
     return t('%mail is not a valid email address. Please check the spelling and try again or contact us for clarification.', array('%mail' => "$mail"));
   }
 
