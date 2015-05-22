@@ -11,12 +11,10 @@
  *   The admin settings form.
  */
 function email_verify_admin_settings($form, &$form_state) {
-  $form = array();
-
-  $form['email_verify_on'] = array(
+  $form['email_verify_active'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enable the Email Verify to verify email adresses'),
-    '#default_value' => variable_get('email_verify_on', 0),
+    '#default_value' => variable_get('email_verify_active', 0),
     '#description' => t('When enabled, Email Verify will check email addresses for validity.'),
   );
 
@@ -60,8 +58,8 @@ function email_verify_admin_settings($form, &$form_state) {
  */
 function email_verify_admin_settings_submit($form, &$form_state) {
   // Enable/disable mail sending subsystem.
-  if ($form_state['values']['email_verify_on']) {
-    if (!email_verify_enabled()) {
+  if ($form_state['values']['email_verify_active']) {
+    if (!email_verify_activated()) {
       email_verify_enable_module();
     }
   }

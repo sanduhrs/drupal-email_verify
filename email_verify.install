@@ -7,11 +7,11 @@
 /**
  * Implements hook_install().
  *
- * Display a message to the admin about enabling this module.
+ * Display a message to the admin about activating this module.
  */
 function email_verify_install() {
   $link = l('administrative settings page', 'admin/config/system/email_verify');
-  $message = t('The Email Verify module has been installed. Before it can be used, it must be enabled and configured on its !adminpage.', array('!adminpage' => $link));
+  $message = t('The Email Verify module has been installed and enabled. However, before it can be used, it must be activated and configured on its !adminpage.', array('!adminpage' => $link));
   drupal_set_message($message);
 }
 
@@ -22,4 +22,26 @@ function email_verify_install() {
  */
 function email_verify_uninstall() {
   db_query("DELETE FROM {variable} WHERE name LIKE 'email_verify_%'");
+}
+
+/**
+ * Implements hook_disable().
+ */
+function email_verify_disable() {
+  $email_verify_active = variable_get('email_verify_active', NULL);
+  if ($email_verify_active !== NULL) {
+    // Inactivate this module.
+    variable_set('email_verify_active', FALSE);
+  }
+}
+
+/**
+ * Changes the email_verify_on variable to email_verify_active.
+ */
+function email_verify_update_7100() {
+  $email_verify_on = variable_get('email_verify_on', NULL);
+  if ($email_verify_on !== NULL) {
+    variable_set('email_verify_active', $email_verify_on);
+    variable_del('email_verify_on');
+  }
 }

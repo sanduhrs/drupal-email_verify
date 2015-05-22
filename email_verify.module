@@ -55,7 +55,7 @@ function email_verify_menu() {
  * Access callback for the page at admin/people/email_verify.
  */
 function email_verify_access_people_email_verify() {
-  if (variable_get('email_verify_on', 0) && user_access('administer users')) {
+  if (variable_get('email_verify_active', 0) && user_access('administer users')) {
     return TRUE;
   }
   return FALSE;
@@ -66,7 +66,7 @@ function email_verify_access_people_email_verify() {
  * Implements hook_form_FORM_ID_alter() for the user_register form.
  */
 function email_verify_form_user_register_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_on', 0) && variable_get('email_verify_user_registration', 1)) {
+  if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_registration', 1)) {
     $form['#validate'][] = 'email_verify_edit_validate';
   }
 }
@@ -75,7 +75,7 @@ function email_verify_form_user_register_form_alter(&$form, &$form_state, $form_
  * Implements hook_form_FORM_ID_alter() for the user_profile form.
  */
 function email_verify_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_on', 0) && variable_get('email_verify_user_profile', 1)) {
+  if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_profile', 1)) {
     $form['#validate'][] = 'email_verify_edit_validate';
   }
 }
@@ -84,7 +84,7 @@ function email_verify_form_user_profile_form_alter(&$form, &$form_state, $form_i
  * Implements hook_form_FORM_ID_alter() for the contact_site form.
  */
 function email_verify_form_contact_site_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_on', 0) && module_exists('contact') && variable_get('email_verify_site_contact', 0)) {
+  if (variable_get('email_verify_active', 0) && module_exists('contact') && variable_get('email_verify_site_contact', 0)) {
     $form['#validate'][] = 'email_verify_edit_validate';
   }
 }
@@ -93,7 +93,7 @@ function email_verify_form_contact_site_form_alter(&$form, &$form_state, $form_i
  * Implements hook_form_FORM_ID_alter() for the contact_personal form.
  */
 function email_verify_form_contact_personal_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_on', 0) && module_exists('contact') && variable_get('email_verify_personal_contact', 0)) {
+  if (variable_get('email_verify_active', 0) && module_exists('contact') && variable_get('email_verify_personal_contact', 0)) {
     $form['#validate'][] = 'email_verify_edit_validate';
   }
 }
@@ -105,7 +105,7 @@ function email_verify_form_contact_personal_form_alter(&$form, &$form_state, $fo
  * https://www.drupal.org/project/registration
  */
 function email_verify_form_registration_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_on', 0) && variable_get('email_verify_user_registration', 1)) {
+  if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_registration', 1)) {
     $form['#validate'][] = 'email_verify_edit_validate';
   }
 }
@@ -148,6 +148,6 @@ function email_verify_check($mail) {
  * @return boolean
  *   Indicates whether the module is enabled or not.
  */
-function email_verify_enabled() {
-  return (bool) variable_get('email_verify_on', 0);
+function email_verify_activated() {
+  return (bool) variable_get('email_verify_active', 0);
 }
