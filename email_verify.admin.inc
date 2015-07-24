@@ -105,7 +105,9 @@ function email_verify_enable_module() {
   // What SMTP servers should we contact?
   $mx_hosts = array();
 
-  module_load_include('inc', 'email_verify', 'windows_compat');
+  if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    module_load_include('inc', 'email_verify', 'windows_compat');
+  }
 
   if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used.

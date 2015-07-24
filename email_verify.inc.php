@@ -15,7 +15,9 @@ function _email_verify_check($mail) {
     return;
   }
 
-  module_load_include('inc', 'email_verify', 'windows_compat');
+  if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    module_load_include('inc', 'email_verify', 'windows_compat');
+  }
 
   $host = drupal_substr(strchr($mail, '@'), 1);
 
