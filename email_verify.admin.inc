@@ -11,11 +11,45 @@
  *   The admin settings form.
  */
 function email_verify_admin_settings($form, &$form_state) {
-  $form['email_verify_active'] = array(
+  $form['email_verify_activate'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Activate module'),
+    '#collapsible' => TRUE,
+  );
+  $form['email_verify_activate']['email_verify_active'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable the Email Verify to verify email adresses'),
+    '#title' => t('Activate this module to verify email adresses'),
     '#default_value' => variable_get('email_verify_active', 0),
-    '#description' => t('When enabled, Email Verify will check email addresses for validity.'),
+    '#description' => t('When activated, Email Verify will check email addresses for validity.'),
+  );
+  $form['email_verify_activate']['email_verify_test_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Testing options'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#description' => t("If the test fails when checking whether this module will work on your system or not, you can try changing the options below to see if they will work better for you."),
+  );
+  $form['email_verify_activate']['email_verify_test_options']['email_verify_test_options_host_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Host name"),
+    '#default_value' => variable_get('email_verify_test_options_host_name', 'drupal.org'),
+    '#description' => t('The name of the host to test with. The default is "drupal.org".'),
+  );
+  // The test is to see if port 25 is open, so offering to change the port
+  // number will not give the correct results. However, there might be some
+  // valid use case for being able to set the port number, so this is being left
+  // here, but commented out, for now.
+//  $form['email_verify_enable']['email_verify_test_options']['email_verify_test_options_port_number'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t("Port number"),
+//    '#default_value' => variable_get('email_verify_test_options_port_number', 25),
+//    '#description' => t('The number of the port to test with. The default is "25".'),
+//  );
+  $form['email_verify_activate']['email_verify_test_options']['email_verify_test_options_timeout'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Timeout"),
+    '#default_value' => variable_get('email_verify_test_options_timeout', 15),
+    '#description' => t('The connection timeout, in seconds. The default is "15".'),
   );
 
   $form['email_verify_forms'] = array(
@@ -34,6 +68,18 @@ function email_verify_admin_settings($form, &$form_state) {
     '#title' => t("User profile"),
     '#default_value' => variable_get('email_verify_user_profile', 1),
   );
+  if (module_exists('contact')) {
+    $form['email_verify_forms']['email_verify_site_contact'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Site-wide contact"),
+      '#default_value' => variable_get('email_verify_site_contact', 0),
+    );
+    $form['email_verify_forms']['email_verify_personal_contact'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Personal contact"),
+      '#default_value' => variable_get('email_verify_personal_contact', 0),
+    );
+  }
 
   $form['email_verify_methods'] = array(
     '#type' => 'fieldset',
@@ -65,48 +111,6 @@ function email_verify_admin_settings($form, &$form_state) {
 //    '#default_value' => variable_get('email_verify_methods_extra_chars', 1),
 //    '#description' => t("Check email addresses with domains with characters that are not in the basic ASCII set: http://php.net/manual/en/function.idn-to-ascii.php."),
 //  );
-
-  $form['email_verify_test_options'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Testing options'),
-    '#collapsible' => TRUE,
-    '#description' => t("If the test fails when checking whether this module will work on your system or not, you can try changing the options below to see if they will work better for you."),
-  );
-  $form['email_verify_test_options']['email_verify_test_options_host_name'] = array(
-    '#type' => 'textfield',
-    '#title' => t("Host name"),
-    '#default_value' => variable_get('email_verify_test_options_host_name', 'drupal.org'),
-    '#description' => t('The name of the host to test with. The default is "drupal.org".'),
-  );
-  // The test is to see if port 25 is open, so offering to change the port
-  // number will not give the correct results. However, there might be some
-  // valid use case for being able to set the port number, so this is being left
-  // here, but commented out, for now.
-//  $form['email_verify_test_options']['email_verify_test_options_port_number'] = array(
-//    '#type' => 'textfield',
-//    '#title' => t("Port number"),
-//    '#default_value' => variable_get('email_verify_test_options_port_number', 25),
-//    '#description' => t('The number of the port to test with. The default is "25".'),
-//  );
-  $form['email_verify_test_options']['email_verify_test_options_timeout'] = array(
-    '#type' => 'textfield',
-    '#title' => t("Timeout"),
-    '#default_value' => variable_get('email_verify_test_options_timeout', 15),
-    '#description' => t('The connection timeout, in seconds. The default is "15".'),
-  );
-
-  if (module_exists('contact')) {
-    $form['email_verify_email']['email_verify_site_contact'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Site-wide contact"),
-      '#default_value' => variable_get('email_verify_site_contact', 0),
-    );
-    $form['email_verify_email']['email_verify_personal_contact'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Personal contact"),
-      '#default_value' => variable_get('email_verify_personal_contact', 0),
-    );
-  }
 
   $form['#submit'] = array('email_verify_admin_settings_submit');
 

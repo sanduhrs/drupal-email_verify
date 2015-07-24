@@ -102,7 +102,7 @@ function email_verify_form_contact_personal_form_alter(&$form, &$form_state, $fo
  * Implements hook_form_FORM_ID_alter().
  *
  * For the Entity Registration module's Registration Form.
- * https://www.drupal.org/project/registration
+ * @see https://www.drupal.org/project/registration
  */
 function email_verify_form_registration_form_alter(&$form, &$form_state, $form_id) {
   if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_registration', 1)) {
@@ -143,10 +143,10 @@ function email_verify_check($mail) {
 }
 
 /**
- * Determine if Email Verify is enabled.
+ * Determine if Email Verify is activated.
  *
  * @return boolean
- *   Indicates whether the module is enabled or not.
+ *   Indicates whether the module is activated or not.
  */
 function email_verify_activated() {
   return (bool) variable_get('email_verify_active', 0);
