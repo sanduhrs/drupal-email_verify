@@ -66,6 +66,35 @@ function email_verify_admin_settings($form, &$form_state) {
 //    '#description' => t("Check email addresses with domains with characters that are not in the basic ASCII set: http://php.net/manual/en/function.idn-to-ascii.php."),
 //  );
 
+  $form['email_verify_test_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Testing options'),
+    '#collapsible' => TRUE,
+    '#description' => t("If the test fails when checking whether this module will work on your system or not, you can try changing the options below to see if they will work better for you."),
+  );
+  $form['email_verify_test_options']['email_verify_test_options_host_name'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Host name"),
+    '#default_value' => variable_get('email_verify_test_options_host_name', 'drupal.org'),
+    '#description' => t('The name of the host to test with. The default is "drupal.org".'),
+  );
+  // The test is to see if port 25 is open, so offering to change the port
+  // number will not give the correct results. However, there might be some
+  // valid use case for being able to set the port number, so this is being left
+  // here, but commented out, for now.
+//  $form['email_verify_test_options']['email_verify_test_options_port_number'] = array(
+//    '#type' => 'textfield',
+//    '#title' => t("Port number"),
+//    '#default_value' => variable_get('email_verify_test_options_port_number', 25),
+//    '#description' => t('The number of the port to test with. The default is "25".'),
+//  );
+  $form['email_verify_test_options']['email_verify_test_options_timeout'] = array(
+    '#type' => 'textfield',
+    '#title' => t("Timeout"),
+    '#default_value' => variable_get('email_verify_test_options_timeout', 15),
+    '#description' => t('The connection timeout, in seconds. The default is "15".'),
+  );
+
   if (module_exists('contact')) {
     $form['email_verify_email']['email_verify_site_contact'] = array(
       '#type' => 'checkbox',
@@ -105,7 +134,7 @@ function email_verify_admin_settings_submit($form, &$form_state) {
  */
 function email_verify_enable_module() {
   // Check that fsockopen() works on port 25.
-  // See: http://drupal.org/node/147883
+  // @see: http://drupal.org/node/147883
 
   // What follows is an adapted version of email_verify_check().
   // The documentation http://api.drupal.org/api/5/function/hook_install says:
@@ -132,7 +161,7 @@ function email_verify_enable_module() {
     return;
   }
 
-  $host = 'drupal.org';
+  $host = variable_get('email_verify_test_options_host_name', 'drupal.org');
   // What SMTP servers should we contact?
   $mx_hosts = array();
 
@@ -145,9 +174,10 @@ function email_verify_enable_module() {
     $mx_hosts[] = $host;
   }
 
+  $timeout = variable_get('email_verify_test_options_timeout', 15);
   // Try to connect to one SMTP server.
   foreach ($mx_hosts as $smtp) {
-    $connect = @fsockopen($smtp, 25, $errno, $errstr, 15);
+    $connect = @fsockopen($smtp, 25, $errno, $errstr, $timeout);
     if (!$connect) {
       continue;
     }
