@@ -20,10 +20,23 @@ function _email_verify_check($mail) {
   }
 
   $host = drupal_substr(strchr($mail, '@'), 1);
+  if (variable_get('email_verify_methods_add_dot', 1)) {
+    $host = $host . '.';
+  }
 
   // Let's see if we can find anything about this host in the DNS.
-  if (!checkdnsrr($host, 'ANY')) {
-    return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+  if (variable_get('email_verify_methods_checkdnsrr', 1)) {
+    if (!checkdnsrr($host, 'ANY')) {
+      watchdog('email_verify', "No DNS records were found, using checkdnsrr() with %host for host and 'ANY' for type.", array('%host' => $host));
+      return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+    }
+  }
+
+  if (variable_get('email_verify_methods_gethostbyname', 1)) {
+    if (gethostbyname($host) == $host) {
+      watchdog('email_verify', "No IPv4 address was found, using gethostbyname() with %host.", array('%host' => $host));
+      return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+    }
   }
 
   // If install found port 25 closed or fsockopen() disabled, we can't test

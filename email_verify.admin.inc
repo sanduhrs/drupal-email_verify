@@ -18,22 +18,53 @@ function email_verify_admin_settings($form, &$form_state) {
     '#description' => t('When enabled, Email Verify will check email addresses for validity.'),
   );
 
-  $form['email_verify_email'] = array(
+  $form['email_verify_forms'] = array(
     '#type' => 'fieldset',
     '#title' => t('Forms to check'),
     '#collapsible' => TRUE,
     '#description' => t("Check the boxes for the forms you want to have this module check email addresses on."),
   );
-  $form['email_verify_email']['email_verify_user_registration'] = array(
+  $form['email_verify_forms']['email_verify_user_registration'] = array(
     '#type' => 'checkbox',
     '#title' => t("User registration"),
     '#default_value' => variable_get('email_verify_user_registration', 1),
   );
-  $form['email_verify_email']['email_verify_user_profile'] = array(
+  $form['email_verify_forms']['email_verify_user_profile'] = array(
     '#type' => 'checkbox',
     '#title' => t("User profile"),
     '#default_value' => variable_get('email_verify_user_profile', 1),
   );
+
+  $form['email_verify_methods'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Methods to use'),
+    '#collapsible' => TRUE,
+    '#description' => t("Check the boxes for the various methods to use when verifying email addresses. If you find you're getting lots of false positives nad/or fals negatives, try changing which options are specified."),
+  );
+  $form['email_verify_methods']['email_verify_methods_checkdnsrr'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Check for any DNS records"),
+    '#default_value' => variable_get('email_verify_methods_checkdnsrr', 1),
+    '#description' => t("Use PHP's checkdnsrr() function to see if there are any DNS records associated with the email address' domain name."),
+  );
+  $form['email_verify_methods']['email_verify_methods_gethostbyname'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Check for a valid IPv4 address"),
+    '#default_value' => variable_get('email_verify_methods_gethostbyname', 1),
+    '#description' => t("Use PHP's gethostbyname() function to see if a valid IPv4 address is associated with the email address' domain name."),
+  );
+  $form['email_verify_methods']['email_verify_methods_add_dot'] = array(
+    '#type' => 'checkbox',
+    '#title' => t("Add a dot to the domain"),
+    '#default_value' => variable_get('email_verify_methods_add_dot', 1),
+    '#description' => t("For hosts that add their own domain to the end of the domain in the email address, this adds an additional '.' to the end of the email address domain, so that it will not fail at the wrong time."),
+  );
+//  $form['email_verify_methods']['email_verify_methods_extra_chars'] = array(
+//    '#type' => 'checkbox',
+//    '#title' => t("Allow non-basic ASCII characters"),
+//    '#default_value' => variable_get('email_verify_methods_extra_chars', 1),
+//    '#description' => t("Check email addresses with domains with characters that are not in the basic ASCII set: http://php.net/manual/en/function.idn-to-ascii.php."),
+//  );
 
   if (module_exists('contact')) {
     $form['email_verify_email']['email_verify_site_contact'] = array(
