@@ -9,12 +9,12 @@
  */
 function _email_verify_check($mail) {
   if (!valid_email_address($mail)) {
-    // The address is syntactically incorrect.
-    // The problem will be caught by the 'user' module anyway, so we avoid
-    // duplicating the error reporting here, just return.
+    // The address is syntactically incorrect. The problem will be caught by the
+    // user module, so avoid duplicating the error reporting by just returning.
     return;
   }
 
+  // If this is a Windows based computer, load the Windows compatibilty file.
   if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
     module_load_include('inc', 'email_verify', 'windows_compat');
   }
@@ -24,18 +24,30 @@ function _email_verify_check($mail) {
     $host = $host . '.';
   }
 
-  // Let's see if we can find anything about this host in the DNS.
+  // Check the DNS records of the email address' domain name to see if anything
+  // is reported.
   if (variable_get('email_verify_methods_checkdnsrr', 1)) {
     if (!checkdnsrr($host, 'ANY')) {
-      watchdog('email_verify', "No DNS records were found, using checkdnsrr() with %host for host and 'ANY' for type.", array('%host' => $host));
-      return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+      watchdog('email_verify', "No DNS records were found, using checkdnsrr() with '%host' for host and 'ANY' for type.", array('%host' => $host));
+      if (function_exists('email_verify_access_people_email_verify') && email_verify_access_people_email_verify()) {
+        return t("No DNS records were found, using checkdnsrr() with '%host' for host and 'ANY' for type.", array('%host' => $host));
+      }
+      else {
+        return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+      }
     }
   }
 
+  // Check to see if the email address' domain name resolves to an IPv4 address.
   if (variable_get('email_verify_methods_gethostbyname', 1)) {
     if (gethostbyname($host) == $host) {
-      watchdog('email_verify', "No IPv4 address was found, using gethostbyname() with %host.", array('%host' => $host));
-      return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+      watchdog('email_verify', 'No IPv4 address was found, using gethostbyname() with %host.', array('%host' => $host));
+      if (function_exists('email_verify_access_people_email_verify') && email_verify_access_people_email_verify()) {
+        return t('No IPv4 address was found, using gethostbyname() with %host.', array('%host' => $host));
+      }
+      else {
+        return t('%host is not a valid email host. Please check the spelling and try again.', array('%host' => "$host"));
+      }
     }
   }
 
@@ -61,6 +73,10 @@ function _email_verify_check($mail) {
     $connect = @fsockopen($smtp, 25, $errno, $errstr, 15);
 
     if (!$connect) {
+      if ($connect === FALSE && $errno === 0) {
+        watchdog('email_verify', 'There was a potential problem initializing the socket when attempting to check an email address.', array(), WATCHDOG_WARNING);
+      }
+
       continue;
     }
 
@@ -74,7 +90,12 @@ function _email_verify_check($mail) {
       // Be on the safe side and accept the address, at least it has a valid
       // domain part.
       watchdog('email_verify', 'Could not verify email address at host @host: @out', array('@host' => $host, '@out' => $out), WATCHDOG_WARNING);
-      return;
+      if (function_exists('email_verify_access_people_email_verify') && email_verify_access_people_email_verify()) {
+        return t('Could not verify email address at host @host: @out', array('@host' => $host, '@out' => $out));
+      }
+      else {
+        return;
+      }
     }
   }
 
@@ -110,7 +131,12 @@ function _email_verify_check($mail) {
     // Again, something went wrong before we could really test the address.
     // Be on the safe side and accept it.
     watchdog('email_verify', 'Could not verify email address at host @host: @from', array('@host' => $host, '@from' => $from), WATCHDOG_WARNING);
-    return;
+    if (function_exists('email_verify_access_people_email_verify') && email_verify_access_people_email_verify()) {
+      return t('Could not verify email address at host @host: @from', array('@host' => $host, '@from' => $from));
+    }
+    else {
+      return;
+    }
   }
   if (
       // This server does not like us (noos.fr behaves like this for instance).
@@ -121,11 +147,21 @@ function _email_verify_check($mail) {
       preg_match("/^4/", $to) && !preg_match("/^450/", $to)) {
     // In those cases, accept the email, but log a warning.
     watchdog('email_verify', 'Could not verify email address at host @host: @to', array('@host' => $host, '@to' => $to), WATCHDOG_WARNING);
-    return;
+    if (function_exists('email_verify_access_people_email_verify') && email_verify_access_people_email_verify()) {
+      return t('Could not verify email address at host @host: @to', array('@host' => $host, '@to' => $to));
+    }
+    else {
+      return;
+    }
   }
   if (!preg_match("/^250/", $to)) {
     watchdog('email_verify', 'Rejected email address: @mail. Reason: @to', array('@mail' => $mail, '@to' => $to), WATCHDOG_WARNING);
-    return t('%mail is not a valid email address. Please check the spelling and try again or contact us for clarification.', array('%mail' => "$mail"));
+    if (function_exists('email_verify_access_people_email_verify') && email_verify_access_people_email_verify()) {
+      return t('Rejected email address: @mail. Reason: @to', array('@mail' => $mail, '@to' => $to));
+    }
+    else {
+      return t('%mail is not a valid email address. Please check the spelling and try again or contact us for clarification.', array('%mail' => "$mail"));
+    }
   }
 
   // Everything is OK, so don't return anything.
