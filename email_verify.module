@@ -33,13 +33,7 @@ function email_verify_permission() {
  */
 function email_verify_menu() {
   $items = array();
-  $items['admin/people/email_verify'] = array(
-    'title' => 'Email Verify',
-    'page callback' => 'email_verify_checkall',
-    'access callback' => 'email_verify_access_people_email_verify',
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'email_verify.check.inc',
-  );
+  // The route to the system configuration page.
   $items['admin/config/system/email_verify'] = array(
     'title' => 'Email Verify',
     'page callback' => 'drupal_get_form',
@@ -48,6 +42,17 @@ function email_verify_menu() {
     'description' => "Configure the Email Verify module's administrative settings.",
     'file' => 'email_verify.admin.inc',
   );
+
+  // The route to the user email address check page.
+  $items['admin/people/email_verify'] = array(
+    'title' => 'Email Verify',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('email_verify_user_check_form'),
+    'access callback' => 'email_verify_access_people_email_verify',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'email_verify.check.inc',
+  );
+
   return $items;
 }
 
