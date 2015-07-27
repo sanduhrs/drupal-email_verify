@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Install the email verify module
+ * Install, update and uninstall related functions for the module.
  */
 
 /**
@@ -10,8 +10,9 @@
  * Display a message to the admin about activating this module.
  */
 function email_verify_install() {
-  $link = l('administrative settings page', 'admin/config/system/email_verify');
-  $message = t('The Email Verify module has been installed and enabled. However, before it can be used, it must be activated and configured on its !adminpage.', array('!adminpage' => $link));
+  $t = get_t();
+  $link = l($t('administrative settings page'), 'admin/config/system/email_verify');
+  $message = $t('The Email Verify module has been installed and enabled. However, before it can be used, it must be activated and configured on its !adminpage.', array('!adminpage' => $link));
   drupal_set_message($message);
 }
 
