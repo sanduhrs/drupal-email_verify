@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Install the email verify module
+ * Install, update and uninstall functions for this module.
  */
 
 /**
