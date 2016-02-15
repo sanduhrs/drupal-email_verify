@@ -85,7 +85,7 @@ function email_verify_admin_settings($form, &$form_state) {
     '#type' => 'fieldset',
     '#title' => t('Methods to use'),
     '#collapsible' => TRUE,
-    '#description' => t("Check the boxes for the various methods to use when verifying email addresses. If you find you're getting lots of false positives nad/or fals negatives, try changing which options are specified."),
+    '#description' => t("Check the boxes for the various methods to use when verifying email addresses. If you find you're getting lots of false positives and/or false negatives, try changing which options are enabled."),
   );
   $form['email_verify_methods']['email_verify_methods_checkdnsrr'] = array(
     '#type' => 'checkbox',
@@ -103,7 +103,7 @@ function email_verify_admin_settings($form, &$form_state) {
     '#type' => 'checkbox',
     '#title' => t("Add a dot to the domain"),
     '#default_value' => variable_get('email_verify_methods_add_dot', 1),
-    '#description' => t("For hosts that add their own domain to the end of the domain in the email address, this adds an additional '.' to the end of the email address domain, so that it will not fail at the wrong time."),
+    '#description' => t("For hosts that add their own domain to the end of the domain in the email address, this adds an additional '.' to the end of the email address domain, so that the check will not fail at the wrong time."),
   );
 //  $form['email_verify_methods']['email_verify_methods_extra_chars'] = array(
 //    '#type' => 'checkbox',
