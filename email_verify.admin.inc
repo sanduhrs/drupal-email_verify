@@ -19,7 +19,7 @@ function email_verify_admin_settings($form, &$form_state) {
   $form['email_verify_activate']['email_verify_active'] = array(
     '#type' => 'checkbox',
     '#title' => t('Activate this module to verify email adresses'),
-    '#default_value' => variable_get('email_verify_active', 0),
+    '#default_value' => email_verify_activated(),
     '#description' => t('When activated, Email Verify will check email addresses for validity.'),
   );
   $form['email_verify_activate']['email_verify_test_options'] = array(

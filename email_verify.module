@@ -60,7 +60,7 @@ function email_verify_menu() {
  * Access callback for the page at admin/people/email_verify.
  */
 function email_verify_access_people_email_verify() {
-  if (variable_get('email_verify_active', 0) && user_access('administer users')) {
+  if (email_verify_activated() && user_access('administer users')) {
     return TRUE;
   }
   return FALSE;
@@ -70,7 +70,7 @@ function email_verify_access_people_email_verify() {
  * Implements hook_form_alter().
  */
 function email_verify_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_active', 0) && !user_access('bypass email verification')) {
+  if (email_verify_activated() && !user_access('bypass email verification')) {
     // Get the list of fields.
     $fields = email_verify_get_form_fields($form_id);
     if (!empty($fields)) {
@@ -178,7 +178,7 @@ function email_verify_check($mail) {
  *   Indicates whether the module is activated or not.
  */
 function email_verify_activated() {
-  return (bool) variable_get('email_verify_active', 0);
+  return variable_get('email_verify_active', FALSE);
 }
 
 /**
