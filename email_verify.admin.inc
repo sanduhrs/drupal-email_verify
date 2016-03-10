@@ -52,6 +52,62 @@ function email_verify_admin_settings($form, &$form_state) {
     '#description' => t('The connection timeout, in seconds. The default is "15".'),
   );
 
+  $form['email_verify_debug_mode'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Debug mode'),
+    '#collapsible' => TRUE,
+  );
+  $form['email_verify_debug_mode']['email_verify_debug_mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable'),
+    '#default_value' => variable_get('email_verify_debug_mode', FALSE),
+    '#description' => t('Check this box to get verbose information about each email address verification made.'),
+  );
+  $form['email_verify_debug_mode']['email_verify_debug_mode_record_log'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Record debugging information in the database log'),
+    '#default_value' => variable_get('email_verify_debug_mode_record_log', FALSE),
+    '#states' => array(
+      'enabled' => array(
+        ':input[name="email_verify_debug_mode"]' => array(
+          'checked' => TRUE
+        )
+      )
+    ),
+  );
+  $form['email_verify_debug_mode']['email_verify_debug_mode_display_page'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display debugging information on the page'),
+    '#default_value' => variable_get('email_verify_debug_mode_display_page', FALSE),
+    '#states' => array(
+      'enabled' => array(
+        ':input[name="email_verify_debug_mode"]' => array(
+          'checked' => TRUE
+        )
+      )
+    ),
+  );
+  $date_types = system_get_date_types();
+  $options = array();
+  foreach ($date_types as $date_type) {
+    $options[$date_type['type']] = $date_type['title'];
+  }
+  $form['email_verify_debug_mode']['email_verify_debug_mode_date_format'] = array(
+    '#type' => 'select',
+    '#title' => t('Date/time format'),
+    '#default_value' => variable_get('email_verify_debug_mode_date_format', ''),
+    '#options' => $options,
+    '#description' => t('Select the date format to use when displaying the dates and times in the debug information.<br />
+      Date types and formats can be modified in the system !datetime settings pages.', array('!datetime' => l(t('Date and time'), 'admin/config/regional/date-time'))),
+    '#states' => array(
+      'enabled' => array(
+        ':input[name="email_verify_debug_mode"]' => array(
+          'checked' => TRUE
+        )
+      )
+    ),
+  );
+
   $form['email_verify_forms'] = array(
     '#type' => 'fieldset',
     '#title' => t('Forms to check'),
@@ -124,7 +180,11 @@ function email_verify_admin_settings_submit($form, &$form_state) {
   // Enable/disable mail sending subsystem.
   if ($form_state['values']['email_verify_active']) {
     if (!email_verify_activated()) {
-      email_verify_enable_module();
+      $debugging_text = email_verify_enable_module();
+      if (!empty($debugging_text)) {
+        // Log and/or display the debugging information.
+        email_verify_process_debug_information($debugging_text);
+      }
     }
   }
 }
@@ -137,6 +197,16 @@ function email_verify_admin_settings_submit($form, &$form_state) {
  *   that it is not in email_verify.install.
  */
 function email_verify_enable_module() {
+  $debugging_mode = variable_get('email_verify_debug_mode', FALSE);
+  $date_time_format = variable_get('email_verify_debug_mode_date_format', 'long');
+  $debugging_text = array();
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Beginning the system capability checks for the Email Verify module (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
+  }
+
   // Check that fsockopen() works on port 25.
   // @see: http://drupal.org/node/147883
 
@@ -153,49 +223,232 @@ function email_verify_enable_module() {
   // If a previous enable found port 25 closed or fsockopen() disabled, don't
   // test it again. Testing can cause a long delay on module enable. Completely
   // uninstall and then re-install this module to re-test.
-  If (variable_get('email_verify_skip_mailbox', FALSE)) {
-    return;
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Checking to see if the system capability checks have already been run (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
+  }
+  if (variable_get('email_verify_skip_mailbox', FALSE)) {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'The system capability checks have already been run, so the system capability check is stopping (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
+    return $debugging_text;
+  }
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'The system capability checks have not been run, so the system capability check is continuing (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
   }
 
   // Check if fsockopen() is disabled.
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Checking to see if fsockopen() is enabled or disabled (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
+  }
   if (!function_exists('fsockopen')) {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'The fsockopen() function does not exist, so the system capability check is stopping (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
     $message = t('Email Verify will test email domains but not mailboxes because the fsockopen() function has been disabled.');
     variable_set('email_verify_skip_mailbox', TRUE);
     drupal_set_message($message, 'warning');
-    return;
+    return $debugging_text;
+  }
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'The fsockopen() function exists, so the system capability check is continuing (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
   }
 
   $host = variable_get('email_verify_test_options_host_name', 'drupal.org');
-  // What SMTP servers should we contact?
-  $mx_hosts = array();
-
-  if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-    module_load_include('inc', 'email_verify', 'windows_compat');
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'The host that will be used for checking the system capability is "%host" (!date_time).',
+      array(
+        '%host' => $host,
+        '!date_time' => format_date(time(), $date_time_format),
+      )
+    );
   }
 
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Checking to see if Microsoft Windows compatible functions are needed (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
+  }
+  if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'Microsoft Windows was detected, so the compatible functions are being loaded (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
+    module_load_include('inc', 'email_verify', 'windows_compat');
+  }
+  else {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'Microsoft Windows was not detected, so the compatible functions are not being loaded (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
+  }
+
+  // What SMTP servers should we contact?
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Retrieving any MX records corresponding to the specified host "%host" (!date_time).',
+      array(
+        '%host' => $host,
+        '!date_time' => format_date(time(), $date_time_format),
+      )
+    );
+  }
+  $mx_hosts = array();
   if (!getmxrr($host, $mx_hosts)) {
     // When there is no MX record, the host itself should be used.
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'No MX records were found, so the host itself will be used to check the system capability (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
     $mx_hosts[] = $host;
+  }
+  else {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'MX records were found, so they will be used to check the system capability (!date_time): !mx_hosts',
+        array(
+          '!date_time' => format_date(time(), $date_time_format),
+          '!mx_hosts' => '<pre>' . print_r($mx_hosts, TRUE) . '</pre>',
+        )
+      );
+    }
   }
 
   $timeout = variable_get('email_verify_test_options_timeout', 15);
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'The timeout setting for checking the system capability is "%timeout" seconds (!date_time).',
+      array(
+        '%timeout' => $timeout,
+        '!date_time' => format_date(time(), $date_time_format),
+      )
+    );
+  }
+
   // Try to connect to one SMTP server.
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Checking the host(s) to see if a connection can be made to any of them (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
+  }
   foreach ($mx_hosts as $smtp) {
     $connect = @fsockopen($smtp, 25, $errno, $errstr, $timeout);
+    if ($debugging_mode) {
+      if ($connect === FALSE) {
+        $debugging_text[] = t(
+          'The attempt to connect to host "%smtp" failed. If provided, the error number was "%errno", and the error string was "%errstr" (!date_time).',
+          array(
+            '%smtp' => $smtp,
+            '%errno' => $errno,
+            '%errstr' => $errstr,
+            '!date_time' => format_date(time(), $date_time_format),
+          )
+        );
+      }
+      else {
+        $debugging_text[] = t(
+          'The attempt to connect to host "%smtp" succeeded. If provided, the error number was "%errno", and the error string was "%errstr" (!date_time).',
+          array(
+            '%smtp' => $smtp,
+            '%errno' => $errno,
+            '%errstr' => $errstr,
+            '!date_time' => format_date(time(), $date_time_format),
+          )
+        );
+      }
+    }
     if (!$connect) {
+      if ($debugging_mode) {
+        $debugging_text[] = t(
+          'The system could not connect to "%smtp" and is continuing to the next host in the list (!date_time).',
+          array(
+            '%smtp' => $smtp,
+            '!date_time' => format_date(time(), $date_time_format),
+          )
+        );
+      }
+      if ($connect === FALSE && $errno === 0) {
+        if ($debugging_mode) {
+          $debugging_text[] = t(
+            'The result of fsockopen() was FALSE, and the error number was 0, which indicates a potential problem initializing the socket. This is the error string: "%errstr" (!date_time).',
+            array(
+              '%errstr' => $errstr,
+              '!date_time' => format_date(time(), $date_time_format),
+            )
+          );
+        }
+        watchdog('email_verify', 'There was a potential problem initializing the socket when attempting to check an email address.', array(), WATCHDOG_WARNING);
+      }
       continue;
     }
 
     if (preg_match("/^220/", $out = fgets($connect, 1024))) {
       // OK, we have a SMTP connection.
+      if ($debugging_mode) {
+        $debugging_text[] = t(
+          'A connection was made to "%smtp", and so the system capability check is continuing (!date_time).',
+          array(
+            '%smtp' => $smtp,
+            '!date_time' => format_date(time(), $date_time_format),
+          )
+        );
+      }
       break;
     }
   }
 
   if (!$connect) {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'No connection could be made to any host. Domains will be checked for validity, but mailboxes cannot be checked (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
     variable_set('email_verify_skip_mailbox', TRUE);
     $message = t('Email Verify will test email domains but not mailboxes because port 25 is closed on your host\'s firewall for security.');
     watchdog('email_verify', $message, array(), WATCHDOG_WARNING);
     drupal_set_message($message, 'warning');
   }
+  else {
+    if ($debugging_mode) {
+      $debugging_text[] = t(
+        'A connection was made to a host, so the system has passed the capability check (!date_time).',
+        array('!date_time' => format_date(time(), $date_time_format))
+      );
+    }
+  }
+
+  if ($debugging_mode) {
+    $debugging_text[] = t(
+      'Ending the system capability checks for the Email Verify module (!date_time).',
+      array('!date_time' => format_date(time(), $date_time_format))
+    );
+  }
+  return $debugging_text;
 }

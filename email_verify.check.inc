@@ -201,15 +201,19 @@ function _email_verify_batch_display_process_batch($user_count, $offset, $disabl
     $account = user_load($user->uid);
     // Check the user account.
     $check_results = email_verify_check($account->mail);
-    if ($check_results) {
+    if (!empty($check_results['verification_message'])) {
       // Add the user to the list.
       $context['results']['users_to_display'][$account->uid] = array(
         'uid' => $account->uid,
         'name' => $account->name,
         'mail' => $account->mail,
-        'reason' => $check_results,
+        'reason' => $check_results['verification_message'],
         'link' => l('account', 'user/' . $account->uid),
       );
+    }
+    if (!empty($check_results['debugging_text'])) {
+      // Log and/or display the debugging information.
+      email_verify_process_debug_information($check_results['debugging_text']);
     }
 
     // Update the progress information.
