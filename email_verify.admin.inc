@@ -163,17 +163,24 @@ function email_verify_admin_settings($form, &$form_state) {
 
 /**
  * Form submit function.
+ *
+ * This runs the module verification check, if activating, and logs whether the
+ * module was activated or inactivated.
  */
 function email_verify_admin_settings_submit($form, &$form_state) {
   // Enable/disable mail sending subsystem.
   if ($form_state['values']['email_verify_active']) {
     if (!email_verify_activated()) {
       $debugging_text = email_verify_enable_module();
+      watchdog('email_verify', 'The Email Verify module was activated.');
       if (!empty($debugging_text)) {
         // Log and/or display the debugging information.
         email_verify_process_debug_information($debugging_text);
       }
     }
+  }
+  elseif (email_verify_activated()) {
+    watchdog('email_verify', 'The Email Verify module was inactivated.');
   }
 }
 
