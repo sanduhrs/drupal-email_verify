@@ -16,6 +16,10 @@
  *   The form definition.
  */
 function email_verify_user_check_form($form, &$form_state) {
+  if (!empty($form_state['input'])) {
+    drupal_set_message(t('Look for the verification results below the form.'));
+  }
+
   $form['header'] = array(
     '#type' => 'fieldset',
     '#title' => t('User check'),
@@ -79,17 +83,19 @@ function email_verify_user_check_form($form, &$form_state) {
 
   // Get any records that have been stored to display.
   $rows = variable_get('email_verify_users_to_display', array());
+  $user_rows = $rows;
+
+  $headers = _email_verify_get_header();
+
+  $form_count = format_plural(
+    count($rows),
+    'Found 1 user whose email address is not valid.',
+    'Found @count users whose email addresses are not valid.'
+  );
+
   if (!empty($rows)) {
     // Rename the button.
     $form['header']['submit']['#value'] = t('Update');
-
-    $headers = _email_verify_get_header();
-
-    $form_count = format_plural(
-      count($rows),
-      'Found 1 user whose email address is not valid.',
-      'Found @count users whose email addresses are not valid.'
-    );
 
     // Set up the sorting.
     _email_verify_sort_rows($headers, $rows);
@@ -100,27 +106,26 @@ function email_verify_user_check_form($form, &$form_state) {
     $pages = array_chunk($rows, 25, TRUE);
 
     // Add the users.
-    if (empty($pages)) {
-      $user_rows = $rows;
-    }
-    else {
+    if (!empty($pages)) {
       $user_rows = $pages[$current_page];
     }
-
-    $form['table'] = array(
-      '#markup' => theme(
-        'table',
-        array(
-          'header' => $headers,
-          'rows' => $user_rows,
-          'caption' => $form_count,
-        )
-      ),
-    );
-
-    // Add the pager.
-    $form['pager'] = array('#markup' => theme('pager'));
   }
+
+  // Theme and add the results.
+  $form['table'] = array(
+    '#markup' => theme(
+      'table',
+      array(
+        'header' => $headers,
+        'rows' => $user_rows,
+        'caption' => $form_count,
+        'empty' => t('All email address checked passed the verification(s).'),
+      )
+    ),
+  );
+
+  // Add the pager.
+  $form['pager'] = array('#markup' => theme('pager'));
 
   return $form;
 }
