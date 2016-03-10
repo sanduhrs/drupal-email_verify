@@ -45,3 +45,58 @@ function email_verify_update_7100() {
     variable_del('email_verify_on');
   }
 }
+
+/**
+ * Updates the selected forms for the new, more flexible way of selecting forms.
+ */
+function email_verify_update_7201() {
+  $forms = variable_get('email_verify_forms', '');
+  if (empty($forms)) {
+    // The user registration form.
+    $email_verify_user_registration = variable_get('email_verify_user_registration', NULL);
+    if (!empty($email_verify_user_registration)) {
+      // Add the form to the list.
+      $forms .= "user_register_form, mail\n";
+      // Delete the old variable.
+      variable_del('email_verify_user_registration');
+    }
+    // The user profile form.
+    $email_verify_user_profile = variable_get('email_verify_user_profile', NULL);
+    if (!empty($email_verify_user_profile)) {
+      // Add the form to the list.
+      $forms .= "user_profile_form, mail\n";
+      // Delete the old variable.
+      variable_del('email_verify_user_profile');
+    }
+    // The site-wide contact form.
+    $email_verify_site_contact = variable_get('email_verify_site_contact', NULL);
+    if (!empty($email_verify_site_contact)) {
+      // Add the form to the list.
+      $forms .= "contact_site_form, mail\n";
+      // Delete the old variable.
+      variable_del('email_verify_site_contact');
+    }
+    // The personal contact form.
+    $email_verify_personal_contact = variable_get('email_verify_personal_contact', NULL);
+    if (!empty($email_verify_personal_contact)) {
+      // Add the form to the list.
+      $forms .= "contact_personal_form, mail\n";
+      // Delete the old variable.
+      variable_del('email_verify_personal_contact');
+    }
+    variable_set('email_verify_forms', $forms);
+  }
+}
+
+/**
+ * Sets the weight of Email Verify to a high number to process all forms.
+ */
+function email_verify_update_7202() {
+  // Set the weight of this module as high as reasonable, so that its form_alter
+  // hook gets called after other modules, because sometimes, the hook for this
+  // module is called before the data is available to it.
+  db_update('system')
+    ->fields(array('weight' => 1000))
+    ->condition('name', 'email_verify', '=')
+    ->execute();
+}

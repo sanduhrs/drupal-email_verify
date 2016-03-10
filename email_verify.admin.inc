@@ -108,34 +108,22 @@ function email_verify_admin_settings($form, &$form_state) {
     ),
   );
 
-  $form['email_verify_forms'] = array(
+  $form['email_verify_forms_to_check'] = array(
     '#type' => 'fieldset',
     '#title' => t('Forms to check'),
     '#collapsible' => TRUE,
-    '#description' => t("Check the boxes for the forms you want to have this module check email addresses on."),
   );
-  $form['email_verify_forms']['email_verify_user_registration'] = array(
-    '#type' => 'checkbox',
-    '#title' => t("User registration"),
-    '#default_value' => variable_get('email_verify_user_registration', 1),
+  $form['email_verify_forms_to_check']['email_verify_forms'] = array(
+    '#type' => 'textarea',
+    '#description' => t('
+      Enter a list of form IDs and field IDs of the forms and corresponding
+      email address fields on which to verify the email addresses. Each
+      form/field combination should be on a separate line and the form ID and
+      field ID should be separated with a comma and should look something like
+      this: <br />user_register_form, mail<br />user_profile_form, mail
+    '),
+    '#default_value' => variable_get('email_verify_forms', ''),
   );
-  $form['email_verify_forms']['email_verify_user_profile'] = array(
-    '#type' => 'checkbox',
-    '#title' => t("User profile"),
-    '#default_value' => variable_get('email_verify_user_profile', 1),
-  );
-  if (module_exists('contact')) {
-    $form['email_verify_forms']['email_verify_site_contact'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Site-wide contact"),
-      '#default_value' => variable_get('email_verify_site_contact', 0),
-    );
-    $form['email_verify_forms']['email_verify_personal_contact'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Personal contact"),
-      '#default_value' => variable_get('email_verify_personal_contact', 0),
-    );
-  }
 
   $form['email_verify_methods'] = array(
     '#type' => 'fieldset',

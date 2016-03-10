@@ -66,76 +66,94 @@ function email_verify_access_people_email_verify() {
   return FALSE;
 }
 
-
 /**
- * Implements hook_form_FORM_ID_alter() for the user_register form.
+ * Implements hook_form_alter().
  */
-function email_verify_form_user_register_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_registration', 1)) {
-    $form['#validate'][] = 'email_verify_edit_validate';
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for the user_profile form.
- */
-function email_verify_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_profile', 1)) {
-    $form['#validate'][] = 'email_verify_edit_validate';
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for the contact_site form.
- */
-function email_verify_form_contact_site_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_active', 0) && module_exists('contact') && variable_get('email_verify_site_contact', 0)) {
-    $form['#validate'][] = 'email_verify_edit_validate';
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter() for the contact_personal form.
- */
-function email_verify_form_contact_personal_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_active', 0) && module_exists('contact') && variable_get('email_verify_personal_contact', 0)) {
-    $form['#validate'][] = 'email_verify_edit_validate';
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- *
- * For the Entity Registration module's Registration Form.
- * @see https://www.drupal.org/project/registration
- */
-function email_verify_form_registration_form_alter(&$form, &$form_state, $form_id) {
-  if (variable_get('email_verify_active', 0) && variable_get('email_verify_user_registration', 1)) {
-    $form['#validate'][] = 'email_verify_edit_validate';
-  }
-}
-
-/**
- * Additional validation for the user form.
- *
- * @param array $form
- *   The form definition.
- * @param array $form_state
- *   The form values which you may perform validation on.
- */
-function email_verify_edit_validate($form, &$form_state) {
-  if (!user_access('bypass email verification') && $form_state['values']['op'] != t('Cancel account')) {
-    // Validate the e-mail address.
-    $results = email_verify_check($form_state['input']['mail']);
-    if (!empty($results['debugging_text'])) {
-      // Log and/or display the debugging information.
-      email_verify_process_debug_information($results['debugging_text']);
-    }
-    // Report the error and flag the form field.
-    if (!empty($results['verification_message'])) {
-      form_set_error('mail', $results['verification_message']);
+function email_verify_form_alter(&$form, &$form_state, $form_id) {
+  if (variable_get('email_verify_active', 0) && !user_access('bypass email verification')) {
+    // Get the list of fields.
+    $fields = email_verify_get_form_fields($form_id);
+    if (!empty($fields)) {
+      // Add the email verification validation callback.
+      array_unshift($form['#validate'], 'email_verify_verify_address');
     }
   }
+}
+
+/**
+ * Additional validation for the form to verify the email address.
+ */
+function email_verify_verify_address($form, &$form_state) {
+  if (isset($form_state['values']['op']) && isset($form_state['values']['submit'])
+    && $form_state['values']['op'] == $form_state['values']['submit']) {
+    // Get the list of fields.
+    $fields = email_verify_get_form_fields($form_state['values']['form_id']);
+    if (!empty($fields)) {
+      foreach ($fields as $field) {
+        if (!empty($form_state['values'][$field])) {
+          // Get the data from the field.
+          if (is_string($form_state['values'][$field])) {
+            // Verify the e-mail address.
+            $error = email_verify_check($form_state['values'][$field]);
+            // Report the error and flag the form field.
+            if (!empty($error)) {
+              form_set_error($field, $error);
+            }
+          }
+          elseif (is_array($form_state['values'][$field])) {
+            foreach ($form_state['values'][$field] as $lang_code) {
+              foreach ($lang_code as $value) {
+                $address = reset($value);
+                if (!empty($address)) {
+                  // Verify the e-mail address.
+                  $error = email_verify_check($address);
+                  // Report the error and flag the form field.
+                  if (!empty($error)) {
+                    form_set_error($field, $error);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Retrieves the forms and fields the admin specified to verify.
+ *
+ * @param string $form_id
+ *   The ID of the form to retrieve the fields for.
+ *
+ * @return array
+ *   An associative array with the key being the form and the
+ */
+function email_verify_get_form_fields($form_id) {
+  $verify_form_fields = array();
+  // Get the list of forms and fields.
+  $email_verify_forms = variable_get('email_verify_forms', '');
+  if (!empty($email_verify_forms)) {
+    // Convert the text data into an array of strings, each representing one
+    // form/field combination.
+    $forms_and_fields = explode("\n", $email_verify_forms);
+    // Process each form/field pair.
+    foreach ($forms_and_fields as $form_and_field) {
+      // Make sure it isn't an empty array element.
+      if (!empty($form_and_field)) {
+        $form_and_field = explode(',', $form_and_field);
+        $form = trim($form_and_field[0]);
+        $field = trim($form_and_field[1]);
+        // If the form and field variables are not empty, and the form variable
+        // matches $form_id, save the field ID.
+        if (!empty($form) && !empty($field) && $form = $form_id) {
+          $verify_form_fields[] = $field;
+        }
+      }
+    }
+  }
+  return $verify_form_fields;
 }
 
 /**
