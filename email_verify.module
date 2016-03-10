@@ -167,7 +167,7 @@ function email_verify_get_form_fields($form_id) {
  *   the address.
  */
 function email_verify_check($mail) {
-  module_load_include('php', 'email_verify', 'email_verify.inc');
+  module_load_include('inc', 'email_verify');
   return _email_verify_check($mail);
 }
 
