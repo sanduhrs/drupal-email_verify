@@ -94,10 +94,14 @@ function email_verify_verify_address($form, &$form_state) {
           // Get the data from the field.
           if (is_string($form_state['values'][$field])) {
             // Verify the e-mail address.
-            $error = email_verify_check($form_state['values'][$field]);
+            $results = email_verify_check($form_state['values'][$field]);
+            if (!empty($results['debugging_text'])) {
+              // Log and/or display the debugging information.
+              email_verify_process_debug_information($results['debugging_text']);
+            }
             // Report the error and flag the form field.
-            if (!empty($error)) {
-              form_set_error($field, $error);
+            if (!empty($results['verification_message'])) {
+              form_set_error($field, $results['verification_message']);
             }
           }
           elseif (is_array($form_state['values'][$field])) {
@@ -106,10 +110,14 @@ function email_verify_verify_address($form, &$form_state) {
                 $address = reset($value);
                 if (!empty($address)) {
                   // Verify the e-mail address.
-                  $error = email_verify_check($address);
+                  $results = email_verify_check($address);
+                  if (!empty($results['debugging_text'])) {
+                    // Log and/or display the debugging information.
+                    email_verify_process_debug_information($results['debugging_text']);
+                  }
                   // Report the error and flag the form field.
-                  if (!empty($error)) {
-                    form_set_error($field, $error);
+                  if (!empty($results['verification_message'])) {
+                    form_set_error($field, $results['verification_message']);
                   }
                 }
               }
