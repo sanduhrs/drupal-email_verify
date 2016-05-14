@@ -75,8 +75,18 @@ function email_verify_form_alter(&$form, &$form_state, $form_id) {
     $fields = email_verify_get_form_fields($form_id);
     if (!empty($fields)) {
       // Add the email verification validation callback.
-      array_unshift($form['#validate'], 'email_verify_verify_address');
-      array_unshift($form['submit']['#validate'], 'email_verify_verify_address');
+      if (empty($form['#validate'])) {
+        $form['#validate'] = array('email_verify_verify_address');
+      }
+      else {
+        array_unshift($form['#validate'], 'email_verify_verify_address');
+      }
+      if (empty($form['submit']['#validate'])) {
+        $form['submit']['#validate'] = array('email_verify_verify_address');
+      }
+      else {
+        array_unshift($form['submit']['#validate'], 'email_verify_verify_address');
+      }
     }
   }
 }
