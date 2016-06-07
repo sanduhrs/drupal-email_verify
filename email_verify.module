@@ -166,7 +166,7 @@ function email_verify_get_form_fields($form_id) {
         $field = trim($form_and_field[1]);
         // If the form and field variables are not empty, and the form variable
         // matches $form_id, save the field ID.
-        if (!empty($form) && !empty($field) && $form = $form_id) {
+        if (!empty($form) && !empty($field) && $form == $form_id) {
           $verify_form_fields[] = $field;
         }
       }
