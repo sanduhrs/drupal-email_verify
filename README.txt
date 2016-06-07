@@ -26,7 +26,7 @@ FROM/RCPT TO chain of commands to the SMTP servers for the found
 host. Some hosts will not reveal if the user name is valid ("catch-all
 policy") while others might refuse the check for some reason (for
 instance, some hosts refuse deliveries from IPs delivered to home
-users by Internet access providers). When in doub, we try to play it
+users by Internet access providers). When in doubt, we try to play it
 safe and rather accept some invalid addresses than to refuse valid
 ones.
 
