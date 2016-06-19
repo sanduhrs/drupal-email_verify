@@ -1,209 +1,83 @@
 <?php
+
 /**
  * @file
- * Verifies thoroughly that email addresses are correctly entered
- * Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>
- * License:   GNU GPL v2 or later
+ * Verifies thoroughly that email addresses are correctly entered.
  */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Component\Utility\Unicode;
 
 /**
  * Implements hook_help().
  */
-function email_verify_help($path, $arg) {
-  if ($path == 'admin/help#email_verify') {
-    $txt = 'This module verifies that email addresses are valid during account registration or edit.';
-    return '<p>' . t($txt) . '</p>';
+function email_verify_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.email_verify':
+      return '<p>' . t('This module verifies that email addresses are valid during account registration or edit.') . '</p>';
   }
-}
-
-/**
- * Implements hook_permission().
- */
-function email_verify_permission() {
-  return array(
-    'bypass email verification' => array(
-      'title' => t('Bypass email verification'),
-      'description' => t('Allow email verification to be bypassed when performing user operations.'),
-    ),
-  );
 }
 
 /**
  * Implements hook_menu().
  */
-function email_verify_menu() {
-  $items = array();
-  // The route to the system configuration page.
-  $items['admin/config/system/email_verify'] = array(
-    'title' => 'Email Verify',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('email_verify_admin_settings'),
-    'access arguments' => array('administer site configuration'),
-    'description' => "Configure the Email Verify module's administrative settings.",
-    'file' => 'email_verify.admin.inc',
-  );
-
-  // The route to the user email address check page.
-  $items['admin/people/email_verify'] = array(
-    'title' => 'Email Verify',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('email_verify_user_check_form'),
-    'access callback' => 'email_verify_access_people_email_verify',
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'email_verify.check.inc',
-  );
-
-  return $items;
-}
-
+// function email_verify_menu() {
+//   $items['admin/config/system/email_verify'] = array(
+//     'title' => 'Email Verify',
+//     'page callback' => 'drupal_get_form',
+//     'page arguments' => array('email_verify_admin_settings'),
+//     'access arguments' => array('administer site configuration'),
+//     'description' => "Configure the Email Verify module's administrative settings.",
+//     'file' => 'email_verify.admin.inc',
+//   );
+//   return $items;
+// }
+//
 /**
  * Access callback for the page at admin/people/email_verify.
  */
-function email_verify_access_people_email_verify() {
-  if (email_verify_activated() && user_access('administer users')) {
-    return TRUE;
-  }
-  return FALSE;
-}
+// function email_verify_access_people_email_verify() {
+//   if (\Drupal::config('email_verify.settings')->get('active') && \Drupal::currentUser()->hasPermission('administer users')) {
+//     return TRUE;
+//   }
+//   return FALSE;
+// }
 
 /**
  * Implements hook_form_alter().
  */
-function email_verify_form_alter(&$form, &$form_state, $form_id) {
-  if (email_verify_activated() && !user_access('bypass email verification')) {
-    // Get the list of fields.
-    $fields = email_verify_get_form_fields($form_id);
-    if (!empty($fields)) {
-      // Add the email verification validation callback.
-      array_unshift($form['#validate'], 'email_verify_verify_address');
-    }
+function email_verify_form_alter(&$form, $form_state, $form_id) {
+  if (\Drupal::config('email_verify.settings')->get('active')) {
+    $form['#validate'][] = 'email_verify_form_validate';
   }
 }
 
 /**
- * Additional validation for the form to verify the email address.
+ * Additional validation for forms.
+ *
+ * @param array $form
+ *   The form definition.
+ * @param array $form_state
+ *   The form values which you may perform validation on.
  */
-function email_verify_verify_address($form, &$form_state) {
-  if (isset($form_state['values']['op']) && isset($form_state['values']['submit'])
-    && $form_state['values']['op'] == $form_state['values']['submit']) {
-    // Get the list of fields.
-    $fields = email_verify_get_form_fields($form_state['values']['form_id']);
-    if (!empty($fields)) {
-      foreach ($fields as $field) {
-        if (!empty($form_state['values'][$field])) {
-          // Get the data from the field.
-          if (is_string($form_state['values'][$field])) {
-            // Verify the e-mail address.
-            $results = email_verify_check($form_state['values'][$field]);
-            if (!empty($results['debugging_text'])) {
-              // Log and/or display the debugging information.
-              email_verify_process_debug_information($results['debugging_text']);
-            }
-            // Report the error and flag the form field.
-            if (!empty($results['verification_message'])) {
-              form_set_error($field, $results['verification_message']);
-            }
-          }
-          elseif (is_array($form_state['values'][$field])) {
-            foreach ($form_state['values'][$field] as $lang_code) {
-              foreach ($lang_code as $value) {
-                $address = reset($value);
-                if (!empty($address)) {
-                  // Verify the e-mail address.
-                  $results = email_verify_check($address);
-                  if (!empty($results['debugging_text'])) {
-                    // Log and/or display the debugging information.
-                    email_verify_process_debug_information($results['debugging_text']);
-                  }
-                  // Report the error and flag the form field.
-                  if (!empty($results['verification_message'])) {
-                    form_set_error($field, $results['verification_message']);
-                  }
-                }
-              }
-            }
-          }
-        }
+function email_verify_form_validate($form, &$form_state) {
+  if (!\Drupal::currentUser()->hasPermission('bypass email verification') && $form_state->getValue('op')->getUntranslatedString() != 'Cancel account') {
+
+    $email = $form_state->getValue('mail');
+    $host = Unicode::substr(strstr($email, '@'), 1);
+
+    $manager = \Drupal::getContainer()->get('email_verify.manager');
+    $manager->checkHost($host);
+
+    // Only check full emails if the host can connect out on port 25.
+    if (\Drupal::config('email_verify.settings')->get('active')) {
+      $manager->checkEmail($email);
+    }
+
+    if ($errors = $manager->getErrors()) {
+      foreach ($errors as $error) {
+        $form_state->setErrorByName('mail', $error);
       }
-    }
-  }
-}
-
-/**
- * Retrieves the forms and fields the admin specified to verify.
- *
- * @param string $form_id
- *   The ID of the form to retrieve the fields for.
- *
- * @return array
- *   An associative array with the key being the form and the
- */
-function email_verify_get_form_fields($form_id) {
-  $verify_form_fields = array();
-  // Get the list of forms and fields.
-  $email_verify_forms = variable_get('email_verify_forms', '');
-  if (!empty($email_verify_forms)) {
-    // Convert the text data into an array of strings, each representing one
-    // form/field combination.
-    $forms_and_fields = explode("\n", $email_verify_forms);
-    // Process each form/field pair.
-    foreach ($forms_and_fields as $form_and_field) {
-      // Make sure it isn't an empty array element.
-      if (!empty($form_and_field)) {
-        $form_and_field = explode(',', $form_and_field);
-        $form = trim($form_and_field[0]);
-        $field = trim($form_and_field[1]);
-        // If the form and field variables are not empty, and the form variable
-        // matches $form_id, save the field ID.
-        if (!empty($form) && !empty($field) && $form = $form_id) {
-          $verify_form_fields[] = $field;
-        }
-      }
-    }
-  }
-  return $verify_form_fields;
-}
-
-/**
- * Verifies whether the given mail address exists.
- *
- * @param string $mail
- *   Email address to verify.
- *
- * @return string
- *   NULL if the address exists, or an error message if we found a problem with
- *   the address.
- */
-function email_verify_check($mail) {
-  module_load_include('inc', 'email_verify');
-  return _email_verify_check($mail);
-}
-
-/**
- * Determine if Email Verify is activated.
- *
- * @return boolean
- *   Indicates whether the module is activated or not.
- */
-function email_verify_activated() {
-  return variable_get('email_verify_active', FALSE);
-}
-
-/**
- * Displays and/or records the collected debugging information.
- *
- * @param array $debug_information
- *   An array of text strings reported during the debugging process.
- */
-function email_verify_process_debug_information($debug_information) {
-  if (!empty($debug_information)) {
-    // Log and/or display the debugging information.
-    $message = implode('<br />', $debug_information);
-    if (variable_get('email_verify_debug_mode_record_log', FALSE)) {
-      watchdog('email_verify debug', $message, array(), WATCHDOG_DEBUG);
-    }
-    if (variable_get('email_verify_debug_mode_display_page', FALSE)) {
-      drupal_set_message($message);
     }
   }
 }
