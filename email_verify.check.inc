@@ -64,8 +64,8 @@ function email_verify_user_check_form($form, &$form_state) {
     '#size' => 15,
     '#description' => t('The number of users to skip before counting the number of users to verify.'),
   );
-  $all_user_count = db_query("SELECT COUNT(DISTINCT uid) FROM users")->fetchField();
-  $active_user_count = db_query("SELECT COUNT(DISTINCT uid) FROM users WHERE status = 1")->fetchField();
+  $all_user_count = db_query("SELECT COUNT(DISTINCT uid) FROM {users}")->fetchField();
+  $active_user_count = db_query("SELECT COUNT(DISTINCT uid) FROM {users} WHERE status = 1")->fetchField();
   $form['header']['disabled'] = array(
     '#type' => 'checkbox',
     '#title' => t('Include blocked/disabled users'),
