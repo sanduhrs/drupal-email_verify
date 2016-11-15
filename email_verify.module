@@ -1,9 +1,11 @@
 <?php
+
 /**
  * @file
- * Verifies thoroughly that email addresses are correctly entered
- * Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>
- * License:   GNU GPL v2 or later
+ * Verifies thoroughly that email addresses are correctly entered.
+ *
+ * Copyright: Daniel Bonniot <bonniot@users.sourceforge.net>.
+ * License: GNU GPL v2 or later.
  */
 
 /**
@@ -11,8 +13,7 @@
  */
 function email_verify_help($path, $arg) {
   if ($path == 'admin/help#email_verify') {
-    $txt = 'This module verifies that email addresses are valid during account registration or edit.';
-    return '<p>' . t($txt) . '</p>';
+    return '<p>' . t('This module verifies that email addresses are valid during account registration or edit.') . '</p>';
   }
 }
 
@@ -193,7 +194,7 @@ function email_verify_check($mail) {
 /**
  * Determine if Email Verify is activated.
  *
- * @return boolean
+ * @return bool
  *   Indicates whether the module is activated or not.
  */
 function email_verify_activated() {

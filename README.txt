@@ -47,7 +47,8 @@ Installation
 This module requires no database changes.
 
 Install like any other module: copy the whole email_verify directory 
-into the directory sites/all/modules/ or wherever you usually put contrib modules.
+into the directory sites/all/modules/ or wherever you usually put contrib
+modules.
 
 You then need to go to admin/build/modules and check the Enabled box for
 email_verify, then save configuration. The module uses the hooks for
@@ -57,8 +58,8 @@ those email bounces and see more people succeed in registering to your
 site!
 
 If you see 'warning: fsockopen(): ...' output on your pages, make sure
-that you set 'Error reporting' on admin/settings/error-reporting to 'Write errors to
-the log'. You will still see such errors in the log. They indicate
+that you set 'Error reporting' on admin/settings/error-reporting to 'Write
+errors to the log'. You will still see such errors in the log. They indicate
 that an SMTP server did not respond (in which case the username was
 supposed valid).
 

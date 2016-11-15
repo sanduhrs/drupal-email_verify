@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * This is for the administrative settings for this module.
@@ -39,12 +40,12 @@ function email_verify_admin_settings($form, &$form_state) {
   // number will not give the correct results. However, there might be some
   // valid use case for being able to set the port number, so this is being left
   // here, but commented out, for now.
-//  $form['email_verify_enable']['email_verify_test_options']['email_verify_test_options_port_number'] = array(
-//    '#type' => 'textfield',
-//    '#title' => t("Port number"),
-//    '#default_value' => variable_get('email_verify_test_options_port_number', 25),
-//    '#description' => t('The number of the port to test with. The default is "25".'),
-//  );
+  // $form['email_verify_enable']['email_verify_test_options']['email_verify_test_options_port_number'] = array(
+  //   '#type' => 'textfield',
+  //   '#title' => t("Port number"),
+  //   '#default_value' => variable_get('email_verify_test_options_port_number', 25),
+  //   '#description' => t('The number of the port to test with. The default is "25".'),
+  // );
   $form['email_verify_activate']['email_verify_test_options']['email_verify_test_options_timeout'] = array(
     '#type' => 'textfield',
     '#title' => t("Timeout"),
@@ -67,25 +68,13 @@ function email_verify_admin_settings($form, &$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Record debugging information in the database log'),
     '#default_value' => variable_get('email_verify_debug_mode_record_log', FALSE),
-    '#states' => array(
-      'enabled' => array(
-        ':input[name="email_verify_debug_mode"]' => array(
-          'checked' => TRUE
-        )
-      )
-    ),
+    '#states' => array('enabled' => array(':input[name="email_verify_debug_mode"]' => array('checked' => TRUE))),
   );
   $form['email_verify_debug_mode']['email_verify_debug_mode_display_page'] = array(
     '#type' => 'checkbox',
     '#title' => t('Display debugging information on the page'),
     '#default_value' => variable_get('email_verify_debug_mode_display_page', FALSE),
-    '#states' => array(
-      'enabled' => array(
-        ':input[name="email_verify_debug_mode"]' => array(
-          'checked' => TRUE
-        )
-      )
-    ),
+    '#states' => array('enabled' => array(':input[name="email_verify_debug_mode"]' => array('checked' => TRUE))),
   );
   $date_types = system_get_date_types();
   $options = array();
@@ -99,13 +88,7 @@ function email_verify_admin_settings($form, &$form_state) {
     '#options' => $options,
     '#description' => t('Select the date format to use when displaying the dates and times in the debug information.<br />
       Date types and formats can be modified in the system !datetime settings pages.', array('!datetime' => l(t('Date and time'), 'admin/config/regional/date-time'))),
-    '#states' => array(
-      'enabled' => array(
-        ':input[name="email_verify_debug_mode"]' => array(
-          'checked' => TRUE
-        )
-      )
-    ),
+    '#states' => array('enabled' => array(':input[name="email_verify_debug_mode"]' => array('checked' => TRUE))),
   );
 
   $form['email_verify_forms_to_check'] = array(
@@ -149,12 +132,12 @@ function email_verify_admin_settings($form, &$form_state) {
     '#default_value' => variable_get('email_verify_methods_add_dot', 1),
     '#description' => t("For hosts that add their own domain to the end of the domain in the email address, this adds an additional '.' to the end of the email address domain, so that the check will not fail at the wrong time."),
   );
-//  $form['email_verify_methods']['email_verify_methods_extra_chars'] = array(
-//    '#type' => 'checkbox',
-//    '#title' => t("Allow non-basic ASCII characters"),
-//    '#default_value' => variable_get('email_verify_methods_extra_chars', 1),
-//    '#description' => t("Check email addresses with domains with characters that are not in the basic ASCII set: http://php.net/manual/en/function.idn-to-ascii.php."),
-//  );
+  // $form['email_verify_methods']['email_verify_methods_extra_chars'] = array(
+  //   '#type' => 'checkbox',
+  //   '#title' => t("Allow non-basic ASCII characters"),
+  //   '#default_value' => variable_get('email_verify_methods_extra_chars', 1),
+  //   '#description' => t("Check email addresses with domains with characters that are not in the basic ASCII set: http://php.net/manual/en/function.idn-to-ascii.php."),
+  // );
 
   $form['#submit'] = array('email_verify_admin_settings_submit');
 
@@ -204,17 +187,14 @@ function email_verify_enable_module() {
 
   // Check that fsockopen() works on port 25.
   // @see: http://drupal.org/node/147883
-
-  // What follows is an adapted version of email_verify_check().
-  // The documentation http://api.drupal.org/api/5/function/hook_install says:
-  //   "Note that since this function is called from a full bootstrap, all
-  //    functions (including those in modules enabled by the current page
-  //    request) are available when this hook is called. Use cases could be
-  //    displaying a user message, or calling a module function necessary for
-  //    initial setup, etc."
-  // However, this does not seem to be the case, so we can't reuse
-  // email_verify_check().
-
+  //
+  // The following is duplicated code from email_verify_check(). The reason it
+  // exists is because in its original use case, it was being called on install,
+  // and the code was not being reliable loaded in all cases. That situation no
+  // longer exists, but before the code is just wholesale replaced by that
+  // function call, it needs to be compared and tested, as some of it was
+  // modified to work in this situation.
+  //
   // If a previous enable found port 25 closed or fsockopen() disabled, don't
   // test it again. Testing can cause a long delay on module enable. Completely
   // uninstall and then re-install this module to re-test.
@@ -426,7 +406,7 @@ function email_verify_enable_module() {
       );
     }
     variable_set('email_verify_skip_mailbox', TRUE);
-    $message = t('Email Verify will test email domains but not mailboxes because port 25 is closed on your host\'s firewall for security.');
+    $message = t("Email Verify will test email domains but not mailboxes because port 25 is closed on your host's firewall for security.");
     watchdog('email_verify', $message, array(), WATCHDOG_WARNING);
     drupal_set_message($message, 'warning');
   }

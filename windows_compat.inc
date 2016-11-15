@@ -1,20 +1,32 @@
 <?php
+
 /**
  * @file
- * Definitions for functions that are missing from the Windows implementation of
- * PHP.
+ * Definitions for functions missing from the Windows implementation of PHP.
  *
  * @see http://drupal.org/node/508004
  */
 
 if (!function_exists('getmxrr')) {
+
+  /**
+   * Checks for getmxrr() before replacing it with win_getmxrr().
+   *
+   * @return bool
+   *   The results of the win_getmxrr() function.
+   *
+   * @see win_getmxrr()
+   */
   function getmxrr($hostname, &$mxhosts, &$mxweight = FALSE) {
     return win_getmxrr($hostname, $mxhosts, $mxweight);
   }
+
 }
 
 /**
- * getmxrr() support for Windows prior to PHP 5.3.0 by HM2K <php [at] hm2k.org>.
+ * Implements getmxrr() for Windows prior to PHP 5.3.0.
+ *
+ * Code originally by HM2K <php [at] hm2k.org>.
  *
  * @param string $hostname
  *   The Internet host name.
@@ -24,7 +36,7 @@ if (!function_exists('getmxrr')) {
  *   If the weight array is given, it will be filled with the weight information
  *   gathered.
  *
- * @return boolean
+ * @return bool
  *   Returns TRUE if any records are found; returns FALSE if no records were
  *   found or if an error occurred.
  *
@@ -32,10 +44,10 @@ if (!function_exists('getmxrr')) {
  */
 function win_getmxrr($hostname, &$mxhosts, &$mxweight = FALSE) {
   if (empty($hostname)) {
-    return;
+    return FALSE;
   }
   if (strtoupper(substr(PHP_OS, 0, 3)) != 'WIN') {
-    return;
+    return FALSE;
   }
 
   if (!is_array($mxhosts)) {
@@ -45,7 +57,7 @@ function win_getmxrr($hostname, &$mxhosts, &$mxweight = FALSE) {
   $exec = 'nslookup -type=MX ' . escapeshellarg($hostname);
   @exec($exec, $output);
   if (empty($output)) {
-    return;
+    return FALSE;
   }
 
   $i = -1;
@@ -64,22 +76,23 @@ function win_getmxrr($hostname, &$mxhosts, &$mxweight = FALSE) {
   return ($i != -1);
 }
 
-/**
- * checkdnsrr() support for Windows prior to PHP 5.3.0.
- *
- * @param string $host
- *   May either be the IP address in dotted-quad notation or the host name.
- * @param string $type
- *   May be any one of: A, MX, NS, SOA, PTR, CNAME, AAAA, A6, SRV, NAPTR, TXT or
- *   ANY.
- *
- * @return boolean
- *   Returns TRUE if any records are found; returns FALSE if no records were
- *   found or if an error occurred.
- *
- * @see http://php.net/manual/function.checkdnsrr.php
- */
 if (!function_exists('checkdnsrr')) {
+
+  /**
+   * Implements checkdnsrr() for Windows prior to PHP 5.3.0.
+   *
+   * @param string $host
+   *   May either be the IP address in dotted-quad notation or the host name.
+   * @param string $type
+   *   May be any one of: A, MX, NS, SOA, PTR, CNAME, AAAA, A6, SRV, NAPTR, TXT
+   *   or ANY.
+   *
+   * @return bool
+   *   Returns TRUE if any records are found; returns FALSE if no records were
+   *   found or if an error occurred.
+   *
+   * @see http://php.net/manual/function.checkdnsrr.php
+   */
   function checkdnsrr($host, $type = '') {
     if (!empty($host)) {
       $type = (empty($type)) ? 'MX' : $type;
@@ -94,4 +107,5 @@ if (!function_exists('checkdnsrr')) {
 
     return FALSE;
   }
+
 }

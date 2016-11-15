@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Checks the email address for validity.

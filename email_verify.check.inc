@@ -1,11 +1,12 @@
 <?php
+
 /**
  * @file
  * User email check menu callback file for email_verify module.
  */
 
 /**
- * Look though the users table for invalid emails.
+ * Look though the users table for invalid email addresses.
  *
  * @param array $form
  *   The form definition.
@@ -400,7 +401,7 @@ function _email_verify_get_header() {
       'data' => t('Reason'),
     ),
     'account' => array(
-      'data' => t(''),
+      'data' => '',
     ),
   );
 }
@@ -421,7 +422,7 @@ function _email_verify_sort_rows($headers, &$rows) {
 
     switch ($order) {
       case 'desc':
-        uasort($rows, function($a, $b) use($order_by) {
+        uasort($rows, function ($a, $b) use ($order_by) {
           if ($a[$order_by] == $b[$order_by]) {
             return 0;
           }
@@ -430,7 +431,7 @@ function _email_verify_sort_rows($headers, &$rows) {
         break;
 
       case 'asc':
-        uasort($rows, function($a, $b) use ($order_by) {
+        uasort($rows, function ($a, $b) use ($order_by) {
           if ($a == $b) {
             return 0;
           }
