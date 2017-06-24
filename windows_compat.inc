@@ -17,7 +17,7 @@ if (!function_exists('getmxrr')) {
    *
    * @see win_getmxrr()
    */
-  function getmxrr($hostname, &$mxhosts, &$mxweight = FALSE) {
+  function getmxrr($hostname, array &$mxhosts, array &$mxweight = array()) {
     return win_getmxrr($hostname, $mxhosts, $mxweight);
   }
 
@@ -42,7 +42,7 @@ if (!function_exists('getmxrr')) {
  *
  * @see http://php.net/manual/function.getmxrr.php#88033
  */
-function win_getmxrr($hostname, &$mxhosts, &$mxweight = FALSE) {
+function win_getmxrr($hostname, array &$mxhosts, array &$mxweight = array()) {
   if (empty($hostname)) {
     return FALSE;
   }

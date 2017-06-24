@@ -16,7 +16,7 @@
  * @return array
  *   The form definition.
  */
-function email_verify_user_check_form($form, &$form_state) {
+function email_verify_user_check_form(array $form, array &$form_state) {
   if (!empty($form_state['input'])) {
     drupal_set_message(t('Look for the verification results below the form.'));
   }
@@ -414,7 +414,7 @@ function _email_verify_get_header() {
  * @param array $rows
  *   The data to sort.
  */
-function _email_verify_sort_rows($headers, &$rows) {
+function _email_verify_sort_rows(array $headers, array &$rows) {
   $order_field = tablesort_get_order($headers);
   $order = tablesort_get_sort($headers);
   if (!empty($order_field['sql'])) {

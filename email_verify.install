@@ -11,8 +11,9 @@
  * Display a message to the admin about activating this module.
  */
 function email_verify_install() {
-  $link = l(t('administrative settings page'), 'admin/config/system/email_verify');
-  $message = t('The Email Verify module has been installed and enabled. However, before it can be used, it must be activated and configured on its !adminpage.', array('!adminpage' => $link));
+  $t = get_t();
+  $link = l($t('administrative settings page'), 'admin/config/system/email_verify');
+  $message = $t('The Email Verify module has been installed and enabled. However, before it can be used, it must be activated and configured on its !adminpage.', array('!adminpage' => $link));
   drupal_set_message($message);
 }
 
@@ -22,7 +23,14 @@ function email_verify_install() {
  * Removes variables created by this module.
  */
 function email_verify_uninstall() {
-  db_query("DELETE FROM {variable} WHERE name LIKE 'email_verify_%'");
+  // Get global variable array.
+  global $conf;
+  foreach (array_keys($conf) as $key) {
+    // Find variables that have the module name prefixed.
+    if (strpos($key, 'email_verify_') === 0) {
+      variable_del($key);
+    }
+  }
 }
 
 /**

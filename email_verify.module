@@ -207,7 +207,7 @@ function email_verify_activated() {
  * @param array $debug_information
  *   An array of text strings reported during the debugging process.
  */
-function email_verify_process_debug_information($debug_information) {
+function email_verify_process_debug_information(array $debug_information) {
   if (!empty($debug_information)) {
     // Log and/or display the debugging information.
     $message = implode('<br />', $debug_information);

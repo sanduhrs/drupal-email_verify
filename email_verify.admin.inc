@@ -383,7 +383,7 @@ function email_verify_enable_module() {
       continue;
     }
 
-    if (preg_match("/^220/", $out = fgets($connect, 1024))) {
+    if (preg_match("/^220/", fgets($connect, 1024))) {
       // OK, we have a SMTP connection.
       if ($debugging_mode) {
         $debugging_text[] = t(
